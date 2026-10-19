@@ -234,28 +234,6 @@ portal/                 the application
 
 tests/test_portal.py    the automated tests
 ```
-
-## Changing the pictures
-
-The pictures that ship with the portal are SVG illustrations. Each image is an ordinary `<img>`
-tag marked with an `<!-- IMAGE: ... -->` comment in the templates. To use your own, replace the
-file in `portal/static/img/` (a photo works too, but then change the extension in the template,
-for example `hero.svg` to `hero.jpg`).
-
-| File | Used in | Suggested size |
-|------|---------|----------------|
-| `logo.svg` | header and browser tab (`base.html`) | square |
-| `hero.svg`, `how-it-works.svg` | `home.html` | 1200 x 675 |
-| `role-resident.svg`, `role-officer.svg`, `role-admin.svg` | `home.html` | 800 x 450 |
-| `auth.svg` | sign-in and register pages, wide screens only | 800 x 1000 |
-| `track.svg` | `track.html` | 1600 x 460 |
-
-Photos residents attach to a request appear as thumbnails on the request page (`/attachments/<id>/view`)
-and open in a viewer; PDFs stay download-only.
-
-Keep each photo under about 500 KB and update the `alt` text to describe your picture. The colours are
-at the top of `portal/static/css/style.css`.
-
 ## What it doesn't do (yet)
 
 This is a first version. There are no payments, SMS or email notifications, links to outside
