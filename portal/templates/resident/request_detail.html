@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, status_badge, timeline, progress, evidence, file_input with context %}
+{% block title %}{{ req.reference_number }}{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>{{ req.title }}</h1></div></div>{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('resident.my_requests') }}">&larr; My requests</a></p>
+<p class="ref">Reference: <strong>{{ req.reference_number }}</strong> {{ status_badge(req.status) }}</p>
+{{ progress(req.status) }}
+
+{% if req.status == 'Awaiting Information' %}
+<section class="card highlight" aria-labelledby="reply-h">
+  <h2 id="reply-h">The county needs more information</h2>
+  <form method="post" action="{{ url_for('resident.reply', request_id=req.id) }}" enctype="multipart/form-data" class="form">
+    {{ csrf() }}
+    <div class="field">
+      <label for="message">Your reply <span class="req">*</span></label>
+      <textarea id="message" name="message" rows="4" required maxlength="2000"></textarea>
+    </div>
+    {{ file_input('Attach files (optional)') }}
+    <button type="submit" class="btn">Send information</button>
+  </form>
+</section>
+{% endif %}
+
+<div class="grid two">
+  <section class="card">
+    <h2>Details</h2>
+    <dl class="details">
+      <dt>Department</dt><dd>{{ req.department }}</dd>
+      <dt>Category</dt><dd>{{ req.category }}</dd>
+      <dt>Location</dt><dd>{{ req.location or 'Not provided' }}</dd>
+      <dt>Submitted</dt><dd>{{ req.created_at|dt }}</dd>
+      <dt>Last updated</dt><dd>{{ req.updated_at|dt }}</dd>
+      {% if req.resolved_at %}<dt>Resolved</dt><dd>{{ req.resolved_at|dt }}</dd>{% endif %}
+    </dl>
+    <h3>Description</h3>
+    <p class="prewrap">{{ req.description }}</p>
+    {% if req.resolution_details %}
+      <h3>Resolution</h3>
+      <p class="prewrap">{{ req.resolution_details }}</p>
+    {% endif %}
+    <h3>Attachments</h3>
+    {{ evidence(attachments) }}
+  </section>
+  <section class="card">
+    <h2>Status history</h2>
+    {{ timeline(history) }}
+  </section>
+</div>
+{% endblock %}

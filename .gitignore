@@ -1,0 +1,13 @@
+# Secrets and local configuration
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+nohup.out
+
+# Vercel
+.vercel/

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 460" preserveAspectRatio="xMidYMid slice" role="img" aria-label="">
+  <rect width="1600" height="460" fill="#dbe9f8"/>
+  <g stroke="#c3d6ea" stroke-width="2"><path d="M0 120h1600M0 240h1600M0 360h1600M200 0v460M480 0v460M760 0v460M1040 0v460M1320 0v460"/></g>
+  <g fill="#eaf3fc"><rect x="220" y="140" width="240" height="80" rx="6"/><rect x="500" y="260" width="240" height="80" rx="6"/><rect x="780" y="140" width="240" height="80" rx="6"/><rect x="1060" y="260" width="240" height="80" rx="6"/><rect x="1340" y="140" width="240" height="80" rx="6"/><rect x="-20" y="260" width="200" height="80" rx="6"/></g>
+  <path d="M120 400C300 400 330 300 480 300S700 190 880 190s300 110 520 110 140-80 240-120" fill="none" stroke="#1a5fa8" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 22"/>
+  <path d="M120 400C300 400 330 300 480 300S700 190 880 190" fill="none" stroke="#1a5fa8" stroke-width="10" stroke-linecap="round"/>
+  <g><circle cx="120" cy="400" r="22" fill="#fff" stroke="#1a5fa8" stroke-width="8"/>
+     <circle cx="500" cy="300" r="20" fill="#fff" stroke="#1a5fa8" stroke-width="8"/>
+     <path d="M880 190c-30-34-50-56-50-82a50 50 0 1 1 100 0c0 26-20 48-50 82z" fill="#f2b01e"/><circle cx="880" cy="108" r="18" fill="#0c2d52"/>
+     <circle cx="1380" cy="296" r="20" fill="#fff" stroke="#9fb9d4" stroke-width="8"/>
+     <circle cx="1640" cy="180" r="22" fill="#fff" stroke="#9fb9d4" stroke-width="8"/></g>
+</svg>

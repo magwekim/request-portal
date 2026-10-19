@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Departments{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Departments</h1></div></div>{% endblock %}
+{% block content %}
+<section class="card" aria-labelledby="new-dept">
+  <h2 id="new-dept">Add a department</h2>
+  <form method="post" action="{{ url_for('admin.create_department') }}" class="form" novalidate>
+    {{ csrf() }}
+    {{ field('name', 'Name', form, errors, maxlength=100) }}
+    {{ field('description', 'Description (optional)', form, errors, required=False, maxlength=300) }}
+    <button type="submit" class="btn">Add department</button>
+  </form>
+</section>
+<div class="table-wrap">
+<table>
+  <caption class="sr-only">Departments</caption>
+  <thead><tr><th scope="col">Department</th><th scope="col">Categories</th><th scope="col">Officers</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+  <tbody>
+  {% for d in departments %}
+    <tr>
+      <td><strong>{{ d.name }}</strong><br><span class="muted">{{ d.description }}</span></td>
+      <td>{{ d.category_count }}</td><td>{{ d.officer_count }}</td>
+      <td>{% if d.is_active %}<span class="badge badge-resolved">Active</span>{% else %}<span class="badge badge-rejected">Inactive</span>{% endif %}</td>
+      <td class="actions-cell">
+        <form method="post" action="{{ url_for('admin.toggle_department', dept_id=d.id) }}" class="inline-form"
+              data-confirm="{{ 'Deactivate' if d.is_active else 'Activate' }} {{ d.name }}? {% if d.is_active %}Residents will no longer be able to submit new requests to it.{% endif %}">
+          {{ csrf() }}<button type="submit" class="btn btn-small {{ 'btn-danger' if d.is_active else 'btn-secondary' }}">{{ 'Deactivate' if d.is_active else 'Activate' }}</button>
+        </form>
+        <details class="inline-details"><summary>Edit</summary>
+          <form method="post" action="{{ url_for('admin.update_department', dept_id=d.id) }}" class="form">
+            {{ csrf() }}
+            <div class="field"><label for="dn-{{ d.id }}">Name</label><input id="dn-{{ d.id }}" name="name" value="{{ d.name }}" required maxlength="100"></div>
+            <div class="field"><label for="dd-{{ d.id }}">Description</label><input id="dd-{{ d.id }}" name="description" value="{{ d.description }}" maxlength="300"></div>
+            <button type="submit" class="btn btn-small">Save</button>
+          </form>
+        </details>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

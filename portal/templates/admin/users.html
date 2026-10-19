@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field, pager with context %}
+{% block title %}User management{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>User management</h1></div></div>{% endblock %}
+{% block content %}
+
+<section class="card" aria-labelledby="new-officer">
+  <h2 id="new-officer">Create a staff account</h2>
+  <form method="post" action="{{ url_for('admin.create_officer') }}" class="form" novalidate>
+    {{ csrf() }}
+    {{ field('full_name', 'Full name', form, errors, maxlength=100) }}
+    {{ field('email', 'Email address', form, errors, type='email') }}
+    {{ field('phone_number', 'Phone number (optional)', form, errors, type='tel', required=False) }}
+    <div class="field">
+      <label for="role">Account type <span class="req">*</span></label>
+      <select id="role" name="role">
+        <option value="officer" {% if form.get('role', 'officer') == 'officer' %}selected{% endif %}>Department officer</option>
+        <option value="admin" {% if form.get('role') == 'admin' %}selected{% endif %}>Administrator (whole application)</option>
+      </select>
+      <p class="hint">Officers work on requests for one department. Administrators manage everything.</p>
+    </div>
+    <div class="field{% if errors.department_id %} has-error{% endif %}">
+      <label for="department_id">Department <span class="muted">(required for officers)</span></label>
+      <select id="department_id" name="department_id">
+        <option value="">Select a department</option>
+        {% for d in departments %}<option value="{{ d.id }}" {% if form.get('department_id') == d.id|string %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select>
+      {% if errors.department_id %}<p class="error-text" role="alert">{{ errors.department_id }}</p>{% endif %}
+    </div>
+    {{ field('password', 'Temporary password', form, errors, type='password', autocomplete='new-password', help='At least 8 characters, with a letter and a number. Share it securely.') }}
+    <button type="submit" class="btn">Create account</button>
+  </form>
+</section>
+
+<h2>All users</h2>
+<form method="get" class="filters" role="search">
+  <div class="field"><label for="q">Search name or email</label><input id="q" name="q" type="search" value="{{ q }}"></div>
+  <div class="field"><label for="role">Role</label>
+    <select id="role" name="role"><option value="">All roles</option>
+      {% for r in ['resident', 'officer', 'admin'] %}<option value="{{ r }}" {% if role == r %}selected{% endif %}>{{ r|capitalize }}</option>{% endfor %}
+    </select></div>
+  <div class="filter-actions"><button type="submit" class="btn">Filter</button><a class="btn btn-secondary" href="{{ url_for('admin.users') }}">Clear</a></div>
+</form>
+{% if page.rows %}
+<div class="table-wrap">
+<table>
+  <caption class="sr-only">User accounts</caption>
+  <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Department</th><th scope="col">Account</th><th scope="col">Actions</th></tr></thead>
+  <tbody>
+  {% for u in page.rows %}
+    <tr>
+      <td>{{ u.full_name }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ u.role|capitalize }}</td>
+      <td>{{ u.department or '-' }}</td>
+      <td>{% if u.is_active %}<span class="badge badge-resolved">Active</span>{% else %}<span class="badge badge-rejected">Deactivated</span>{% endif %}</td>
+      <td class="actions-cell">
+        {% if u.id != current_user.id %}
+        <form method="post" action="{{ url_for('admin.toggle_user', user_id=u.id) }}" class="inline-form"
+              {% if u.is_active %}data-confirm="Deactivate {{ u.full_name }}? They will be signed out and unable to log in."{% endif %}>
+          {{ csrf() }}
+          <button type="submit" class="btn btn-small {{ 'btn-danger' if u.is_active else 'btn-secondary' }}">{{ 'Deactivate' if u.is_active else 'Activate' }}</button>
+        </form>
+        {% else %}<span class="muted">You</span>{% endif %}
+        {% if u.role == 'officer' %}
+        <details class="inline-details"><summary>Change department</summary>
+          <form method="post" action="{{ url_for('admin.set_officer_department', user_id=u.id) }}" class="inline-assign">
+            {{ csrf() }}
+            <label class="sr-only" for="dept-{{ u.id }}">Department for {{ u.full_name }}</label>
+            <select id="dept-{{ u.id }}" name="department_id">
+              {% for d in departments %}<option value="{{ d.id }}" {% if d.id == u.department_id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn btn-small">Save</button>
+          </form>
+        </details>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{{ pager(page) }}
+{% else %}
+  <div class="empty"><p>No users match your filters.</p></div>
+{% endif %}
+{% endblock %}

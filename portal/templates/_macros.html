@@ -1,0 +1,172 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro status_badge(status) %}<span class="badge badge-{{ status|lower|replace(' ', '-') }}">{{ status }}</span>{% endmacro %}
+
+{% macro field(name, label, form, errors, type='text', required=True, help=None, autocomplete=None, maxlength=None) %}
+<div class="field{% if errors.get(name) %} has-error{% endif %}">
+  <label for="{{ name }}">{{ label }}{% if required %} <span class="req" title="required">*</span>{% endif %}</label>
+  <input id="{{ name }}" name="{{ name }}" type="{{ type }}"
+         {% if type != 'password' %}value="{{ form.get(name, '') }}"{% endif %}
+         {% if required %}required{% endif %}
+         {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+         {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+         {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% elif help %}aria-describedby="{{ name }}-hint"{% endif %}>
+  {% if help %}<p class="hint" id="{{ name }}-hint">{{ help }}</p>{% endif %}
+  {% if errors.get(name) %}<p class="error-text" id="{{ name }}-error" role="alert">{{ errors[name] }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro pager(p) %}
+{% if p.pages > 1 %}
+<nav class="pager" aria-label="Pagination">
+  {% set args = (request.view_args or {}).copy() %}
+  {% for k, v in request.args.items() if k != 'page' %}{% set _ = args.update({k: v}) %}{% endfor %}
+  {% if p.page > 1 %}<a href="{{ url_for(request.endpoint, page=p.page - 1, **args) }}">&larr; Previous</a>{% endif %}
+  <span>Page {{ p.page }} of {{ p.pages }} ({{ p.total }} results)</span>
+  {% if p.page < p.pages %}<a href="{{ url_for(request.endpoint, page=p.page + 1, **args) }}">Next &rarr;</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro stat_card(key, label, value, tone='') %}
+<div class="stat-card {{ tone }}"><span class="stat-value" data-stat="{{ key }}">{{ value }}</span><span class="stat-label">{{ label }}</span></div>
+{% endmacro %}
+
+{# Request filter form. departments/categories only needed when show_department is true. #}
+{% macro filter_form(filters, show_department=False, departments=[], categories=[], extra_hidden={}) %}
+<form method="get" class="filters" role="search" aria-label="Filter requests">
+  {% for k, v in extra_hidden.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  <div class="field"><label for="q">Search</label>
+    <input id="q" name="q" type="search" value="{{ filters.q }}" placeholder="Title or reference"></div>
+  <div class="field"><label for="status">Status</label>
+    <select id="status" name="status"><option value="">All statuses</option>
+      {% for s in STATUSES %}<option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select></div>
+  {% if show_department %}
+  <div class="field"><label for="department">Department</label>
+    <select id="department" name="department" data-dept-source="category">
+      <option value="">All departments</option>
+      {% for d in departments %}<option value="{{ d.id }}" {% if filters.department|string == d.id|string %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+    </select></div>
+  <div class="field"><label for="category">Category</label>
+    <select id="category" name="category"><option value="">All categories</option>
+      {% for c in categories %}<option value="{{ c.id }}" data-dept="{{ c.department_id }}" {% if filters.category|string == c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select></div>
+  {% endif %}
+  <div class="field"><label for="date_from">From date</label>
+    <input id="date_from" name="date_from" type="date" value="{{ filters.date_from }}"></div>
+  <div class="field"><label for="date_to">To date</label>
+    <input id="date_to" name="date_to" type="date" value="{{ filters.date_to }}"></div>
+  <div class="filter-actions">
+    <button type="submit" class="btn">Apply filters</button>
+    <a class="btn btn-secondary" href="{{ url_for(request.endpoint, **extra_hidden) }}">Clear</a>
+  </div>
+</form>
+{% endmacro %}
+
+{% macro request_table(items, base, show_resident=False, show_officer=False) %}
+<div class="table-wrap">
+<table>
+  <caption class="sr-only">Service requests</caption>
+  <thead><tr>
+    <th scope="col">Reference</th><th scope="col">Title</th>
+    {% if show_resident %}<th scope="col">Resident</th>{% endif %}
+    <th scope="col">Department</th><th scope="col">Status</th>
+    {% if show_officer %}<th scope="col">Officer</th>{% endif %}
+    <th scope="col">Submitted</th>
+  </tr></thead>
+  <tbody>
+  {% for r in items %}
+    <tr>
+      <td><a href="{{ url_for(base, request_id=r.id) }}">{{ r.reference_number }}</a></td>
+      <td>{{ r.title }}</td>
+      {% if show_resident %}<td>{{ r.resident_name }}</td>{% endif %}
+      <td>{{ r.department }}<br><span class="muted">{{ r.category }}</span></td>
+      <td>{{ status_badge(r.status) }}</td>
+      {% if show_officer %}<td>{{ r.officer_name or 'Unassigned' }}</td>{% endif %}
+      <td>{{ r.created_at|dt }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endmacro %}
+
+{% macro timeline(rows, staff=False) %}
+<ol class="timeline">
+{% for h in rows %}
+  <li>
+    <p class="tl-head">
+      {% if h.old_status is none %}<strong>Request submitted</strong> {{ status_badge(h.new_status) }}
+      {% elif h.old_status != h.new_status %}<strong>Status changed:</strong> {{ status_badge(h.old_status) }} &rarr; {{ status_badge(h.new_status) }}
+      {% elif h.public_comment %}<strong>Public response</strong>
+      {% else %}<strong>Internal note</strong>{% endif %}
+    </p>
+    <p class="meta">{{ h.created_at|dt }} &middot;
+      {% if staff %}{{ h.actor_name }} ({{ h.actor_role }})
+      {% elif h.actor_role == 'resident' %}You
+      {% else %}County staff{% endif %}</p>
+    {% if h.public_comment %}<p class="prewrap">{{ h.public_comment }}</p>{% endif %}
+    {% if staff and h.internal_note %}<p class="internal prewrap"><strong>Internal note (never shown to the resident):</strong> {{ h.internal_note }}</p>{% endif %}
+  </li>
+{% endfor %}
+</ol>
+{% endmacro %}
+
+{# Simple three-step tracker: Pending -> In Progress -> Resolved (detailed status is shown as a badge) #}
+{% macro progress(status) %}
+{% set step = progress_step(status) %}
+{% if step is none %}
+<p class="progress-closed"><span class="badge badge-rejected">Rejected</span> This request was closed without a resolution. See the history for the reason.</p>
+{% else %}
+<ol class="progress" aria-label="Request progress">
+  {% for label in PROGRESS_STEPS %}
+  <li class="{{ 'done' if loop.index0 < step else ('current' if loop.index0 == step else '') }}"{% if loop.index0 == step %} aria-current="step"{% endif %}>
+    <span class="progress-dot" aria-hidden="true">{{ '&#10003;'|safe if loop.index0 < step or (loop.index0 == step and step == 2) else loop.index }}</span>
+    <span class="progress-label">{{ label }}</span>
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}
+{% endmacro %}
+
+{# Photos show as thumbnails that open in a viewer; PDFs show as a file card. Everything can be downloaded. #}
+{% macro evidence(items, staff=False) %}
+{% if items %}
+<ul class="evidence">
+  {% for a in items %}
+  {% set is_photo = a.content_type in ('image/png', 'image/jpeg') %}
+  <li class="evidence-item">
+    {% if is_photo %}
+    <a class="evidence-thumb" href="{{ url_for('files.view_attachment', attachment_id=a.id) }}" data-lightbox data-caption="{{ a.original_filename }}">
+      <img src="{{ url_for('files.view_attachment', attachment_id=a.id) }}" alt="Photo: {{ a.original_filename }}" loading="lazy">
+    </a>
+    {% else %}
+    <span class="evidence-doc" aria-hidden="true">PDF</span>
+    {% endif %}
+    <div class="evidence-meta">
+      <span class="evidence-name">{{ a.original_filename }}</span>
+      <span class="muted">{{ a.size|filesize }}{% if staff %} &middot; {{ a.uploader }}, {{ a.created_at|dt }}{% endif %}</span>
+      <a href="{{ url_for('files.download_attachment', attachment_id=a.id) }}">Download</a>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}<p class="muted">No files attached.</p>{% endif %}
+{% endmacro %}
+
+{# File picker with drag and drop and previews. The server still checks every file (uploads.py). #}
+{% macro file_input(label='Supporting evidence (optional)', error=None, id='evidence') %}
+<div class="field{% if error %} has-error{% endif %}">
+  <label for="{{ id }}">{{ label }}</label>
+  <div class="dropzone" data-dropzone>
+    <input id="{{ id }}" name="evidence" type="file" multiple accept=".pdf,.png,.jpg,.jpeg"
+           data-max-bytes="{{ config.MAX_FILE_BYTES }}" data-max-files="{{ config.MAX_FILES }}" aria-describedby="{{ id }}-hint">
+    <p class="dropzone-text"><strong>Choose photos or a PDF</strong><span> or drop them here</span></p>
+  </div>
+  <ul class="file-previews" data-previews></ul>
+  <p class="file-note" data-file-note role="status" aria-live="polite"></p>
+  <p class="hint" id="{{ id }}-hint">Up to {{ config.MAX_FILES }} files (PDF, PNG or JPG), {{ (config.MAX_FILE_BYTES / 1048576)|round(1) }} MB each. Large photos are shrunk for you before they are sent.</p>
+  {% if error %}<p class="error-text" role="alert">{{ error }}</p>{% endif %}
+</div>
+{% endmacro %}

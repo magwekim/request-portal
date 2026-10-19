@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, status_badge, timeline, progress, evidence with context %}
+{% block title %}{{ req.reference_number }}{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>{{ req.title }}</h1></div></div>{% endblock %}
+{% block content %}
+<p><a href="{{ back_url }}">&larr; Back to requests</a></p>
+<p class="ref">Reference: <strong>{{ req.reference_number }}</strong> {{ status_badge(req.status) }}</p>
+{{ progress(req.status) }}
+
+<div class="detail-grid">
+  <div>
+    <section class="card">
+      <h2>Request details</h2>
+      <dl class="details">
+        <dt>Resident</dt><dd>{{ req.resident_name }}</dd>
+        <dt>Contact</dt><dd>{{ req.resident_email }}{% if req.resident_phone %} &middot; {{ req.resident_phone }}{% endif %}</dd>
+        <dt>Department</dt><dd>{{ req.department }}</dd>
+        <dt>Category</dt><dd>{{ req.category }}</dd>
+        <dt>Assigned to</dt><dd>{{ req.officer_name or 'Unassigned' }}</dd>
+        <dt>Location</dt><dd>{{ req.location or 'Not provided' }}</dd>
+        <dt>Submitted</dt><dd>{{ req.created_at|dt }}</dd>
+        <dt>Last updated</dt><dd>{{ req.updated_at|dt }}</dd>
+      </dl>
+      <h3>Description</h3>
+      <p class="prewrap">{{ req.description }}</p>
+      {% if req.resolution_details %}<h3>Resolution details</h3><p class="prewrap">{{ req.resolution_details }}</p>{% endif %}
+      <h3>Supporting evidence</h3>
+      {{ evidence(attachments, staff=True) }}
+    </section>
+
+    <section class="card" aria-labelledby="hist">
+      <h2 id="hist">Status history and notes</h2>
+      {{ timeline(history, staff=True) }}
+    </section>
+  </div>
+
+  <div>
+    {% if not can_process %}
+      <section class="card"><h2>Process this request</h2>
+        <p class="muted">You can view this request but it is assigned to another officer, so you cannot change it.</p></section>
+    {% else %}
+      {% if can_claim %}
+      <section class="panel">
+        <h2 class="panel-title">Take this request</h2>
+        <div class="panel-body">
+          <form method="post" action="{{ url_for('staff.claim', request_id=req.id) }}" data-confirm="Assign this request to yourself?">
+            {{ csrf() }}<button type="submit" class="btn">Assign to me</button>
+          </form>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if is_closed %}
+        <section class="card"><h2>Request closed</h2>
+          <p class="muted">The status can no longer be changed, but you can still add a note or a public response.</p></section>
+      {% else %}
+      <section class="panel">
+        <h2 class="panel-title">Update status</h2>
+        <div class="panel-body">
+          <form method="post" action="{{ url_for('staff.update_status', request_id=req.id) }}" data-confirm-values="Resolved,Rejected" data-confirm-select="new_status" data-confirm="This will close the request and it cannot be reopened. Continue?">
+            {{ csrf() }}
+            <div class="field">
+              <label for="new_status">New status</label>
+              <select id="new_status" name="new_status" required data-toggle-resolution>
+                <option value="">Select a status</option>
+                {% for s in status_options %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="field" id="resolution-field">
+              <label for="resolution_details">Resolution details <span class="muted">(required to resolve)</span></label>
+              <textarea id="resolution_details" name="resolution_details" rows="3" maxlength="3000"></textarea>
+            </div>
+            <div class="field">
+              <label for="public_comment">Message to resident <span class="muted">(required to reject; visible to the resident)</span></label>
+              <textarea id="public_comment" name="public_comment" rows="2" maxlength="2000"></textarea>
+            </div>
+            <div class="field">
+              <label for="internal_note">Internal note <span class="muted">(staff only)</span></label>
+              <textarea id="internal_note" name="internal_note" rows="2" maxlength="2000"></textarea>
+            </div>
+            <button type="submit" class="btn">Update status</button>
+          </form>
+        </div>
+      </section>
+
+      {% if can_request_info %}
+      <section class="panel is-public">
+        <h2 class="panel-title">Ask the resident for more information</h2>
+        <div class="panel-body">
+          <form method="post" action="{{ url_for('staff.request_info', request_id=req.id) }}">
+            {{ csrf() }}
+            <div class="field">
+              <label for="info_comment">What do you need from the resident?</label>
+              <textarea id="info_comment" name="public_comment" rows="3" required maxlength="2000"></textarea>
+            </div>
+            <button type="submit" class="btn btn-secondary">Ask resident for information</button>
+          </form>
+        </div>
+      </section>
+      {% endif %}
+      {% endif %}
+
+      <section class="panel is-public">
+        <h2 class="panel-title">Public response (the resident can read this)</h2>
+        <div class="panel-body">
+          <form method="post" action="{{ url_for('staff.respond', request_id=req.id) }}">
+            {{ csrf() }}
+            <div class="field">
+              <label for="respond_comment">Your response</label>
+              <textarea id="respond_comment" name="public_comment" rows="2" required maxlength="2000"></textarea>
+            </div>
+            <button type="submit" class="btn btn-secondary">Post public response</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel is-private">
+        <h2 class="panel-title">Private internal note (staff only)</h2>
+        <div class="panel-body">
+          <form method="post" action="{{ url_for('staff.add_note', request_id=req.id) }}">
+            {{ csrf() }}
+            <div class="field">
+              <label for="note_text">Note, never shown to the resident</label>
+              <textarea id="note_text" name="internal_note" rows="2" required maxlength="2000"></textarea>
+            </div>
+            <button type="submit" class="btn btn-secondary">Save internal note</button>
+          </form>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if current_user.role == 'admin' and not is_closed %}
+    <section class="panel">
+      <h2 class="panel-title">Assign request</h2>
+      <div class="panel-body">
+        <form method="post" action="{{ url_for('admin.assign', request_id=req.id) }}" class="assign-form">
+          {{ csrf() }}
+          <div class="field">
+            <label for="department_id">Department</label>
+            <select id="department_id" name="department_id" required data-dept-source="category_id,officer_id">
+              {% for d in departments %}<option value="{{ d.id }}" {% if d.id == req.department_id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="category_id">Category</label>
+            <select id="category_id" name="category_id" required>
+              {% for c in categories %}<option value="{{ c.id }}" data-dept="{{ c.department_id }}" {% if c.id == req.category_id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="officer_id">Officer</label>
+            <select id="officer_id" name="officer_id">
+              <option value="">No officer (department queue)</option>
+              {% for o in officers %}<option value="{{ o.id }}" data-dept="{{ o.department_id }}" {% if o.id == req.assigned_officer_id %}selected{% endif %}>{{ o.full_name }}</option>{% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn">Save assignment</button>
+        </form>
+      </div>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

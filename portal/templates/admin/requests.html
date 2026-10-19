@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_macros.html" import filter_form, request_table, pager with context %}
+{% block title %}All requests{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>All requests</h1></div></div>{% endblock %}
+{% block content %}
+{{ filter_form(filters, show_department=True, departments=departments, categories=categories) }}
+{% if page.rows %}
+  {{ request_table(page.rows, 'admin.request_detail', show_resident=True, show_officer=True) }}
+  {{ pager(page) }}
+{% else %}
+  <div class="empty"><p>No requests match your filters.</p></div>
+{% endif %}
+{% endblock %}

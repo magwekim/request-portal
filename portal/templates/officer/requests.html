@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import filter_form, request_table, pager with context %}
+{% block title %}Requests{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Requests</h1></div></div>{% endblock %}
+{% block content %}
+<nav class="tabs" aria-label="Request views">
+  <a href="{{ url_for('officer.requests_list', view='all') }}" {% if view == 'all' %}aria-current="page"{% endif %}>All in my scope</a>
+  <a href="{{ url_for('officer.requests_list', view='mine') }}" {% if view == 'mine' %}aria-current="page"{% endif %}>Assigned to me</a>
+  <a href="{{ url_for('officer.requests_list', view='unassigned') }}" {% if view == 'unassigned' %}aria-current="page"{% endif %}>Unassigned in my department</a>
+</nav>
+{{ filter_form(filters, show_department=True, departments=departments, categories=categories, extra_hidden={'view': view}) }}
+{% if page.rows %}
+  {{ request_table(page.rows, 'officer.request_detail', show_resident=True, show_officer=True) }}
+  {{ pager(page) }}
+{% else %}
+  <div class="empty"><p>No requests found for this view and filter selection.</p></div>
+{% endif %}
+{% endblock %}

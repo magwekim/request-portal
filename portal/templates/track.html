@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field, status_badge, timeline, progress with context %}
+{% block title %}Track a request{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Track a request</h1></div></div>{% endblock %}
+{% block content %}
+<!-- IMAGE: track. Replace static/img/track.svg (1600x460) or change the src below. -->
+<img class="page-banner" src="{{ url_for('static', filename='img/track.svg') }}" alt="" width="1600" height="460">
+<p>Enter your reference number and the email address you registered with. For privacy, a reference number alone is never enough. Sign in to see full details.</p>
+<form method="post" class="card form" novalidate>
+  {{ csrf() }}
+  {{ field('reference', 'Reference number', form, {}, help='Example: PSR-2026-000001', maxlength=40) }}
+  {{ field('email', 'Email address', form, {}, type='email', autocomplete='email', maxlength=254) }}
+  <button type="submit" class="btn">Track request</button>
+</form>
+{% if result %}
+<section class="card" aria-labelledby="res">
+  <h2 id="res">{{ result.request.reference_number }} {{ status_badge(result.request.status) }}</h2>
+  {{ progress(result.request.status) }}
+  <dl class="details">
+    <dt>Department</dt><dd>{{ result.request.department }}</dd>
+    <dt>Category</dt><dd>{{ result.request.category }}</dd>
+    <dt>Submitted</dt><dd>{{ result.request.created_at|dt }}</dd>
+    <dt>Last updated</dt><dd>{{ result.request.updated_at|dt }}</dd>
+  </dl>
+  <h3>Progress</h3>
+  {{ timeline(result.history) }}
+</section>
+{% endif %}
+{% endblock %}

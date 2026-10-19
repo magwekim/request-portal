@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Home{% endblock %} | {{ app_name }}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+<header class="site-header">
+  <div class="container masthead">
+    <a class="brand" href="{{ url_for('public.home') }}">
+      <!-- LOGO: replace the file static/img/logo.svg (square, about 256x256) or change the src below -->
+      <img class="brand-logo" src="{{ url_for('static', filename='img/logo.svg') }}" alt="{{ county_name }} logo">
+      <span class="brand-text"><strong>{{ county_name }}</strong><span>{{ app_name }}</span></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+  </div>
+  <div class="nav-bar"><div class="container">
+    <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+      {% set ep = request.endpoint or '' %}
+      {% macro link(endpoint, label) %}<a href="{{ url_for(endpoint) }}"{% if ep == endpoint %} aria-current="page"{% endif %}>{{ label }}</a>{% endmacro %}
+      {% if not current_user %}
+        {{ link('public.home', 'Home') }}
+        {{ link('public.track', 'Track a request') }}
+        {{ link('public.login', 'Sign in') }}
+        {{ link('public.register', 'Register') }}
+      {% elif current_user.role == 'resident' %}
+        {{ link('resident.dashboard', 'Dashboard') }}
+        {{ link('resident.submit', 'New request') }}
+        {{ link('resident.my_requests', 'My requests') }}
+        {{ link('public.profile', 'Profile') }}
+      {% elif current_user.role == 'officer' %}
+        {{ link('officer.dashboard', 'Dashboard') }}
+        {{ link('officer.requests_list', 'Requests') }}
+        {{ link('public.profile', 'Profile') }}
+      {% else %}
+        {{ link('admin.dashboard', 'Dashboard') }}
+        {{ link('admin.all_requests', 'Requests') }}
+        {{ link('admin.assignments', 'Assignments') }}
+        {{ link('admin.users', 'Users') }}
+        {{ link('admin.departments', 'Departments') }}
+        {{ link('admin.categories', 'Categories') }}
+        {{ link('admin.audit_log', 'Audit log') }}
+        {{ link('public.profile', 'Profile') }}
+      {% endif %}
+      {% if current_user %}
+      <form method="post" action="{{ url_for('public.logout') }}" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="link-button">Sign out ({{ current_user.full_name.split(' ')[0] }})</button>
+      </form>
+      {% endif %}
+    </nav>
+  </div></div>
+</header>
+{% block page_head %}{% endblock %}
+<main id="main" class="container main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flashes">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</div>
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <p>&copy; {{ current_year }} {{ county_name }} &middot; {{ app_name }}</p>
+    <p>Times are shown in East Africa Time (EAT).</p>
+  </div>
+</footer>
+</body>
+</html>

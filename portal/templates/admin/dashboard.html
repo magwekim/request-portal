@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, request_table with context %}
+{% block title %}Administrator dashboard{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Administrator dashboard</h1></div></div>{% endblock %}
+{% block content %}
+<div class="stats">
+  {{ stat_card('total', 'Total requests', stats.total) }}
+  {{ stat_card('open_cases', 'Open cases', stats.open_cases, 'warn') }}
+  {{ stat_card('pending', 'Pending (awaiting action)', stats.pending, 'warn') }}
+  {{ stat_card('in_progress', 'In progress', stats.in_progress) }}
+  {{ stat_card('awaiting_info', 'Awaiting resident', stats.awaiting_info) }}
+  {{ stat_card('resolved', 'Resolved', stats.resolved, 'good') }}
+  {{ stat_card('rejected', 'Rejected', stats.rejected) }}
+  {{ stat_card('unassigned', 'Open and unassigned', unassigned, 'warn') }}
+</div>
+<section class="card" aria-labelledby="ovr">
+  <h2 id="ovr">Open vs resolved cases</h2>
+  {% if stats.total %}
+  <ul class="meters">
+    {% for label, value, cls in (('Open', stats.open_cases, 'open'), ('Resolved', stats.resolved, 'resolved'), ('Rejected', stats.rejected, 'rejected')) %}
+    <li>
+      <label for="meter-{{ cls }}">{{ label }}: <strong>{{ value }}</strong> of {{ stats.total }} ({{ (value * 100 / stats.total)|round|int }}%)</label>
+      <meter id="meter-{{ cls }}" class="meter-{{ cls }}" min="0" max="{{ stats.total }}" value="{{ value }}">{{ value }}</meter>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">No requests yet, so there is nothing to compare.</p>{% endif %}
+</section>
+{% if unassigned %}<p><a class="btn" href="{{ url_for('admin.assignments') }}">Assign {{ unassigned }} open request{{ 's' if unassigned != 1 }}</a></p>{% endif %}
+
+<h2>Requests by department and status</h2>
+<div class="table-wrap">
+<table>
+  <caption class="sr-only">Requests grouped by department and status</caption>
+  <thead><tr><th scope="col">Department</th>{% for s in STATUSES %}<th scope="col">{{ s }}</th>{% endfor %}<th scope="col">Total</th></tr></thead>
+  <tbody>
+  {% for d in by_department %}
+    <tr><th scope="row">{{ d.name }}</th>{% for s in STATUSES %}<td>{{ d.counts[s] }}</td>{% endfor %}<td><strong>{{ d.total }}</strong></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2>Latest requests</h2>
+{% if recent %}
+  {{ request_table(recent, 'admin.request_detail', show_resident=True, show_officer=True) }}
+{% else %}
+  <div class="empty"><p>No requests have been submitted yet.</p></div>
+{% endif %}
+{% endblock %}

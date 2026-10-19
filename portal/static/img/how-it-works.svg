@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Three stages of a request: report it, get a reference number, see it resolved">
+  <rect width="1200" height="675" fill="#eaf3fc"/>
+  <g fill="#dbe9f8"><circle cx="90" cy="90" r="150"/><circle cx="1130" cy="600" r="190"/></g>
+  <path d="M250 340h120M630 340h120" stroke="#1a5fa8" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/>
+  <path d="M356 326l16 14-16 14M736 326l16 14-16 14" fill="none" stroke="#1a5fa8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 1 report -->
+  <g>
+    <rect x="70" y="170" width="190" height="340" rx="28" fill="#0c2d52"/><rect x="82" y="184" width="166" height="312" rx="18" fill="#fff"/>
+    <rect x="98" y="206" width="134" height="12" rx="6" fill="#1a5fa8"/>
+    <rect x="98" y="236" width="134" height="30" rx="8" fill="#eaf3fc" stroke="#c3d6ea"/><rect x="98" y="276" width="134" height="30" rx="8" fill="#eaf3fc" stroke="#c3d6ea"/>
+    <rect x="98" y="316" width="134" height="70" rx="8" fill="#eaf3fc" stroke="#c3d6ea"/>
+    <rect x="98" y="398" width="62" height="52" rx="8" fill="#dbe9f8"/><path d="M106 440l16-20 12 12 8-8 12 16z" fill="#9fc2e6"/><circle cx="120" cy="412" r="5" fill="#f2b01e"/>
+    <rect x="98" y="460" width="134" height="24" rx="12" fill="#f2b01e"/>
+  </g>
+  <!-- 2 reference -->
+  <g>
+    <rect x="430" y="200" width="300" height="280" rx="20" fill="#fff" stroke="#c3d6ea" stroke-width="2"/>
+    <rect x="430" y="200" width="300" height="62" rx="20" fill="#1a5fa8"/><rect x="430" y="240" width="300" height="22" fill="#1a5fa8"/>
+    <circle cx="470" cy="231" r="14" fill="#f2b01e"/><path d="M463 231l5 5 9-10" fill="none" stroke="#0c2d52" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="496" y="237" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="18" font-weight="700" fill="#fff">Request received</text>
+    <text x="456" y="312" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="14" fill="#5b6874">Your reference number</text>
+    <rect x="456" y="326" width="248" height="54" rx="10" fill="#eaf3fc" stroke="#9fc2e6" stroke-dasharray="6 5"/>
+    <text x="580" y="361" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="22" font-weight="700" fill="#0c2d52">PSR-2026-000124</text>
+    <rect x="456" y="404" width="170" height="10" rx="5" fill="#dbe9f8"/><rect x="456" y="426" width="120" height="10" rx="5" fill="#dbe9f8"/>
+  </g>
+  <!-- 3 resolved -->
+  <g>
+    <rect x="860" y="200" width="270" height="280" rx="20" fill="#fff" stroke="#c3d6ea" stroke-width="2"/>
+    <circle cx="995" cy="290" r="48" fill="#e6f4ec"/><circle cx="995" cy="290" r="32" fill="#2e8b57"/><path d="M979 290l11 12 21-24" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="995" y="372" text-anchor="middle" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" fill="#0c2d52">Resolved</text>
+    <rect x="900" y="394" width="190" height="9" rx="4.5" fill="#dbe9f8"/><rect x="925" y="414" width="140" height="9" rx="4.5" fill="#dbe9f8"/>
+    <g><rect x="920" y="440" width="22" height="22" rx="11" fill="#2e8b57"/><rect x="954" y="440" width="22" height="22" rx="11" fill="#2e8b57"/><rect x="988" y="440" width="22" height="22" rx="11" fill="#2e8b57"/></g>
+  </g>
+</svg>

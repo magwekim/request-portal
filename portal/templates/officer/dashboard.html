@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, request_table with context %}
+{% block title %}Officer dashboard{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Officer dashboard</h1></div></div>{% endblock %}
+{% block content %}
+<p>{{ current_user.full_name }}{% if department %} &middot; {{ department }}{% endif %}</p>
+<div class="stats">
+  {{ stat_card('total', 'Requests in my scope', stats.total) }}
+  {{ stat_card('mine', 'Open and assigned to me', mine) }}
+  {{ stat_card('pending', 'Awaiting action', stats.pending, 'warn') }}
+  {{ stat_card('awaiting_info', 'Awaiting resident', stats.awaiting_info) }}
+  {{ stat_card('in_progress', 'In progress', stats.in_progress) }}
+  {{ stat_card('resolved', 'Resolved', stats.resolved, 'good') }}
+  {{ stat_card('rejected', 'Rejected', stats.rejected) }}
+</div>
+<h2>Oldest requests awaiting action</h2>
+{% if queue %}
+  {{ request_table(queue, 'officer.request_detail', show_resident=True, show_officer=True) }}
+  <p><a href="{{ url_for('officer.requests_list') }}">View all requests</a></p>
+{% else %}
+  <div class="empty"><p>Nothing is waiting for action right now.</p></div>
+{% endif %}
+{% endblock %}

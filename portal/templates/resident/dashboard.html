@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, request_table with context %}
+{% block title %}My dashboard{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Welcome, {{ current_user.full_name }}</h1></div></div>{% endblock %}
+{% block content %}
+<div class="stats">
+  {{ stat_card('total', 'Total requests', stats.total) }}
+  {{ stat_card('pending', 'Awaiting county action', stats.pending) }}
+  {{ stat_card('awaiting_info', 'Need your information', stats.awaiting_info, 'warn') }}
+  {{ stat_card('in_progress', 'In progress', stats.in_progress) }}
+  {{ stat_card('resolved', 'Resolved', stats.resolved, 'good') }}
+  {{ stat_card('rejected', 'Rejected', stats.rejected) }}
+</div>
+{% if stats.awaiting_info %}
+<div class="flash flash-info" role="status">{{ stats.awaiting_info }} of your requests need additional information from you. Open the request to reply.</div>
+{% endif %}
+<p><a class="btn" href="{{ url_for('resident.submit') }}">Submit a new request</a></p>
+<h2>Recent activity</h2>
+{% if recent %}
+  {{ request_table(recent, 'resident.request_detail') }}
+  <p><a href="{{ url_for('resident.my_requests') }}">View all my requests</a></p>
+{% else %}
+  <div class="empty"><p>You have not submitted any requests yet.</p><a class="btn" href="{{ url_for('resident.submit') }}">Submit your first request</a></div>
+{% endif %}
+{% endblock %}

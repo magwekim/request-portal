@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="">
+  <rect width="800" height="1000" fill="#0c2d52"/>
+  <circle cx="660" cy="170" r="230" fill="#1a5fa8" opacity=".55"/><circle cx="90" cy="860" r="260" fill="#1a5fa8" opacity=".4"/>
+  <!-- streetlight -->
+  <g transform="translate(95 0)"><rect x="570" y="300" width="12" height="520" fill="#dbe9f8"/><path d="M576 304c0-44-44-60-104-50" fill="none" stroke="#dbe9f8" stroke-width="12" stroke-linecap="round"/><rect x="400" y="236" width="76" height="20" rx="9" fill="#dbe9f8"/><path d="M410 256h56l28 150H382z" fill="#f9d56e" opacity=".22"/></g>
+  <!-- hall -->
+  <g opacity=".95"><path d="M400 520 640 640H160z" fill="#f2b01e"/><rect x="190" y="640" width="420" height="22" fill="#fff"/><g fill="#dbe9f8"><rect x="214" y="662" width="30" height="170"/><rect x="290" y="662" width="30" height="170"/><rect x="366" y="662" width="30" height="170"/><rect x="442" y="662" width="30" height="170"/><rect x="518" y="662" width="30" height="170"/></g><rect x="170" y="832" width="460" height="18" fill="#9fc2e6"/><rect x="150" y="850" width="500" height="18" fill="#7ba5d1"/><circle cx="400" cy="590" r="20" fill="#0c2d52"/></g>
+  <rect y="868" width="800" height="132" fill="#081d36"/>
+  <g fill="#f4f7fb"><rect x="60" y="930" width="130" height="10" rx="3"/><rect x="290" y="930" width="130" height="10" rx="3"/><rect x="520" y="930" width="130" height="10" rx="3"/></g>
+  <g fill="#dbe9f8" opacity=".9"><circle cx="120" cy="140" r="3"/><circle cx="240" cy="90" r="2"/><circle cx="330" cy="200" r="2.5"/><circle cx="180" cy="270" r="2"/><circle cx="470" cy="120" r="2"/></g>
+</svg>

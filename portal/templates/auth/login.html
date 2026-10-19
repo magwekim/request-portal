@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Sign in{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Sign in</h1></div></div>{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <!-- IMAGE: auth. Replace static/img/auth.svg (800x1000) or change the src below. Shown on wide screens only. -->
+  <div class="auth-image"><img src="{{ url_for('static', filename='img/auth.svg') }}" alt="" width="800" height="1000"></div>
+  <div class="auth-form">
+    <h2>Sign in to your account</h2>
+    <form method="post" class="form" novalidate>
+      {{ csrf() }}
+      {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+      {{ field('email', 'Email address', form, errors, type='email', autocomplete='username') }}
+      {{ field('password', 'Password', form, errors, type='password', autocomplete='current-password') }}
+      <button type="submit" class="btn">Sign in</button>
+    </form>
+    <p class="muted">No account yet? <a href="{{ url_for('public.register') }}">Register as a resident</a>. Officer and administrator accounts are created by an administrator.</p>
+  </div>
+</div>
+{% endblock %}

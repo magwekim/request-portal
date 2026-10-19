@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, status_badge, pager with context %}
+{% block title %}Officer assignment{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Officer assignment</h1></div></div>{% endblock %}
+{% block content %}
+<nav class="tabs" aria-label="Assignment views">
+  <a href="{{ url_for('admin.assignments', show='unassigned') }}" {% if show == 'unassigned' %}aria-current="page"{% endif %}>Unassigned</a>
+  <a href="{{ url_for('admin.assignments', show='all') }}" {% if show == 'all' %}aria-current="page"{% endif %}>All open requests</a>
+</nav>
+{% if page.rows %}
+<div class="table-wrap">
+<table>
+  <caption class="sr-only">Open requests and their assigned officers</caption>
+  <thead><tr><th scope="col">Reference</th><th scope="col">Title</th><th scope="col">Department</th><th scope="col">Status</th><th scope="col">Assign officer</th></tr></thead>
+  <tbody>
+  {% for r in page.rows %}
+    {% set dept_officers = officers|selectattr('department_id', 'equalto', r.department_id)|list %}
+    <tr>
+      <td><a href="{{ url_for('admin.request_detail', request_id=r.id) }}">{{ r.reference_number }}</a></td>
+      <td>{{ r.title }}</td>
+      <td>{{ r.department }}<br><span class="muted">{{ r.category }}</span></td>
+      <td>{{ status_badge(r.status) }}</td>
+      <td>
+        {% if dept_officers %}
+        <form method="post" action="{{ url_for('admin.assign', request_id=r.id) }}" class="inline-assign">
+          {{ csrf() }}
+          <input type="hidden" name="back" value="list">
+          <input type="hidden" name="department_id" value="{{ r.department_id }}">
+          <input type="hidden" name="category_id" value="{{ r.category_id }}">
+          <label class="sr-only" for="officer-{{ r.id }}">Officer for {{ r.reference_number }}</label>
+          <select id="officer-{{ r.id }}" name="officer_id">
+            <option value="">No officer</option>
+            {% for o in dept_officers %}<option value="{{ o.id }}" {% if o.id == r.assigned_officer_id %}selected{% endif %}>{{ o.full_name }}</option>{% endfor %}
+          </select>
+          <button type="submit" class="btn btn-small">Save</button>
+        </form>
+        {% else %}
+          <span class="muted">No active officer in this department.</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{{ pager(page) }}
+{% else %}
+  <div class="empty"><p>{% if show == 'unassigned' %}Every open request has an officer assigned.{% else %}There are no open requests.{% endif %}</p></div>
+{% endif %}
+{% endblock %}

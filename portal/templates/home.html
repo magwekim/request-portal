@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero" aria-labelledby="page-title">
+  <div class="hero-copy">
+    <h1 id="page-title">Report a service problem to the county</h1>
+    <p class="lead">Use this portal to report problems such as a broken streetlight, a water fault or missed garbage collection. You will get a reference number and can follow the request until the county resolves it.</p>
+    <div class="actions">
+      {% if current_user %}
+        <a class="btn btn-accent" href="{{ url_for('public.dashboard') }}">Go to my dashboard</a>
+      {% else %}
+        <a class="btn btn-accent" href="{{ url_for('public.register') }}">Register to submit a request</a>
+        <a class="btn btn-on-dark" href="{{ url_for('public.login') }}">Sign in</a>
+      {% endif %}
+      <a class="btn btn-on-dark" href="{{ url_for('public.track') }}">Track a request</a>
+    </div>
+  </div>
+  <!-- IMAGE: hero. Replace the file static/img/hero.svg or change the src below. -->
+  <figure class="hero-art">
+    <img src="{{ url_for('static', filename='img/hero.svg') }}" alt="A county crew repairing a road while a resident follows the report on a phone" width="1200" height="675">
+  </figure>
+</section>
+
+<section class="how" aria-labelledby="how">
+  <div class="split wide-left">
+    <div>
+      <h2 id="how">How to use this portal</h2>
+      <ol class="steps">
+        <li>Register for a resident account and sign in.</li>
+        <li>Choose the department and category, describe the problem, give the location and attach a photo if you have one.</li>
+        <li>Keep the reference number you receive, for example <code>PSR-2026-000001</code>.</li>
+        <li>Follow the status: Pending, In Progress, then Resolved. If officers need more details, you will be asked to reply on the request page.</li>
+      </ol>
+    </div>
+    <!-- IMAGE: how-it-works. Replace static/img/how-it-works.svg or change the src below. -->
+    <figure class="figure">
+      <img src="{{ url_for('static', filename='img/how-it-works.svg') }}" alt="A request goes from a phone report, to a reference number, to Resolved" width="1200" height="675">
+    </figure>
+  </div>
+</section>
+
+<section aria-labelledby="roles">
+  <h2 id="roles">Who uses the portal</h2>
+  <div class="grid three">
+    <!-- IMAGE: role-resident. Replace static/img/role-resident.svg or change the src below. -->
+    <figure class="role-card">
+      <img src="{{ url_for('static', filename='img/role-resident.svg') }}" alt="A resident photographing a damaged road" width="800" height="450" loading="lazy">
+      <figcaption><strong>Residents</strong> submit requests, upload evidence and track every status change.</figcaption>
+    </figure>
+    <!-- IMAGE: role-officer. Replace static/img/role-officer.svg or change the src below. -->
+    <figure class="role-card">
+      <img src="{{ url_for('static', filename='img/role-officer.svg') }}" alt="A county officer working through a queue of requests" width="800" height="450" loading="lazy">
+      <figcaption><strong>County officers</strong> work on requests for their department and reply to residents.</figcaption>
+    </figure>
+    <!-- IMAGE: role-admin. Replace static/img/role-admin.svg or change the src below. -->
+    <figure class="role-card">
+      <img src="{{ url_for('static', filename='img/role-admin.svg') }}" alt="An administrator's dashboard with totals, a chart and an audit log" width="800" height="450" loading="lazy">
+      <figcaption><strong>Administrators</strong> manage departments, officers and assignments, and review the audit log.</figcaption>
+    </figure>
+  </div>
+  <p class="muted">This portal handles service requests and complaints only. It is not a news, jobs or tenders portal.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Profile{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>My profile</h1></div></div>{% endblock %}
+{% block content %}
+<div class="grid two">
+  <section class="card">
+    <h2>Account</h2>
+    <dl class="details">
+      <dt>Email</dt><dd>{{ current_user.email }}</dd>
+      <dt>Role</dt><dd>{{ current_user.role|capitalize }}</dd>
+      <dt>Member since</dt><dd>{{ current_user.created_at|dt }}</dd>
+    </dl>
+    <form method="post" class="form" novalidate>
+      {{ csrf() }}
+      {{ field('full_name', 'Full name', form or {'full_name': current_user.full_name}, errors, maxlength=100) }}
+      {{ field('phone_number', 'Phone number (optional)', form or {'phone_number': current_user.phone_number or ''}, errors, type='tel', required=False) }}
+      <button type="submit" class="btn">Save changes</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Change password</h2>
+    <form method="post" action="{{ url_for('public.change_password') }}" class="form">
+      {{ csrf() }}
+      {{ field('current_password', 'Current password', {}, {}, type='password', autocomplete='current-password') }}
+      {{ field('new_password', 'New password', {}, {}, type='password', autocomplete='new-password', help='At least 8 characters, with a letter and a number.') }}
+      {{ field('confirm_password', 'Confirm new password', {}, {}, type='password', autocomplete='new-password') }}
+      <button type="submit" class="btn">Change password</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

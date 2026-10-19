@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Request categories{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container"><h1>Request categories</h1></div></div>{% endblock %}
+{% block content %}
+<section class="card" aria-labelledby="new-cat">
+  <h2 id="new-cat">Add a category</h2>
+  <form method="post" action="{{ url_for('admin.create_category') }}" class="form" novalidate>
+    {{ csrf() }}
+    <div class="field{% if errors.department_id %} has-error{% endif %}">
+      <label for="department_id">Department <span class="req">*</span></label>
+      <select id="department_id" name="department_id" required>
+        <option value="">Select a department</option>
+        {% for d in departments %}<option value="{{ d.id }}" {% if form.get('department_id') == d.id|string %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select>
+      {% if errors.department_id %}<p class="error-text" role="alert">{{ errors.department_id }}</p>{% endif %}
+    </div>
+    {{ field('name', 'Category name', form, errors, maxlength=100) }}
+    {{ field('description', 'Description (optional)', form, errors, required=False, maxlength=300) }}
+    <button type="submit" class="btn">Add category</button>
+  </form>
+</section>
+<div class="table-wrap">
+<table>
+  <caption class="sr-only">Request categories</caption>
+  <thead><tr><th scope="col">Category</th><th scope="col">Department</th><th scope="col">Requests</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+  <tbody>
+  {% for c in categories %}
+    <tr>
+      <td><strong>{{ c.name }}</strong><br><span class="muted">{{ c.description }}</span></td>
+      <td>{{ c.department }}</td><td>{{ c.used }}</td>
+      <td>{% if c.is_active %}<span class="badge badge-resolved">Active</span>{% else %}<span class="badge badge-rejected">Inactive</span>{% endif %}</td>
+      <td class="actions-cell">
+        <form method="post" action="{{ url_for('admin.toggle_category', category_id=c.id) }}" class="inline-form"
+              data-confirm="{{ 'Deactivate' if c.is_active else 'Activate' }} the category {{ c.name }}?">
+          {{ csrf() }}<button type="submit" class="btn btn-small {{ 'btn-danger' if c.is_active else 'btn-secondary' }}">{{ 'Deactivate' if c.is_active else 'Activate' }}</button>
+        </form>
+        <details class="inline-details"><summary>Edit</summary>
+          <form method="post" action="{{ url_for('admin.update_category', category_id=c.id) }}" class="form">
+            {{ csrf() }}
+            <div class="field"><label for="cn-{{ c.id }}">Name</label><input id="cn-{{ c.id }}" name="name" value="{{ c.name }}" required maxlength="100"></div>
+            <div class="field"><label for="cd-{{ c.id }}">Description</label><input id="cd-{{ c.id }}" name="description" value="{{ c.description }}" maxlength="300"></div>
+            <button type="submit" class="btn btn-small">Save</button>
+          </form>
+        </details>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

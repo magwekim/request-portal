@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="County crew repairing a road while a resident follows the report on a phone">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe3f7"/><stop offset="1" stop-color="#eaf3fc"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#f2b01e" stop-opacity=".55"/><stop offset="1" stop-color="#f2b01e" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#sky)"/>
+  <circle cx="930" cy="150" r="120" fill="url(#glow)"/><circle cx="930" cy="150" r="46" fill="#f9d56e"/>
+  <path d="M0 330c120-60 230-60 350-10s250 30 380-20 300-20 470 30v210H0z" fill="#c3daf1"/>
+  <g fill="#a9c9ea"><rect x="40" y="300" width="70" height="170"/><rect x="118" y="268" width="54" height="202"/><rect x="180" y="320" width="80" height="150"/><rect x="900" y="290" width="64" height="180"/><rect x="972" y="326" width="90" height="144"/><rect x="1070" y="280" width="60" height="190"/></g>
+  <g fill="#fff" opacity=".7"><rect x="52" y="320" width="10" height="12"/><rect x="74" y="320" width="10" height="12"/><rect x="52" y="348" width="10" height="12"/><rect x="74" y="348" width="10" height="12"/><rect x="130" y="290" width="10" height="12"/><rect x="150" y="290" width="10" height="12"/><rect x="130" y="320" width="10" height="12"/><rect x="150" y="320" width="10" height="12"/><rect x="915" y="312" width="10" height="12"/><rect x="935" y="312" width="10" height="12"/><rect x="1085" y="304" width="10" height="12"/><rect x="1105" y="304" width="10" height="12"/></g>
+  <!-- county hall -->
+  <g>
+    <rect x="360" y="262" width="400" height="20" fill="#0c2d52"/>
+    <path d="M560 190 770 262H350z" fill="#1a5fa8"/>
+    <circle cx="560" cy="238" r="16" fill="#f2b01e"/>
+    <rect x="372" y="282" width="376" height="150" fill="#f4f8fd"/>
+    <g fill="#dbe9f8"><rect x="392" y="282" width="22" height="150"/><rect x="452" y="282" width="22" height="150"/><rect x="512" y="282" width="22" height="150"/><rect x="586" y="282" width="22" height="150"/><rect x="646" y="282" width="22" height="150"/><rect x="706" y="282" width="22" height="150"/></g>
+    <rect x="540" y="352" width="40" height="80" rx="3" fill="#0c2d52"/>
+    <rect x="356" y="432" width="408" height="14" fill="#9fb9d4"/><rect x="342" y="446" width="436" height="14" fill="#8aa8c6"/>
+    <rect x="558" y="136" width="4" height="58" fill="#0c2d52"/><path d="M562 138h44l-12 12 12 12h-44z" fill="#2e8b57"/>
+  </g>
+  <!-- pavement and road -->
+  <rect y="458" width="1200" height="26" fill="#c9d9ea"/>
+  <rect y="484" width="1200" height="191" fill="#2d4258"/>
+  <rect y="484" width="1200" height="6" fill="#223548"/>
+  <g fill="#f4f7fb"><rect x="30" y="590" width="110" height="9" rx="2"/><rect x="230" y="590" width="110" height="9" rx="2"/><rect x="710" y="590" width="110" height="9" rx="2"/><rect x="910" y="590" width="110" height="9" rx="2"/><rect x="1110" y="590" width="110" height="9" rx="2"/></g>
+  <!-- repaired patch -->
+  <ellipse cx="520" cy="560" rx="104" ry="30" fill="#1e2e40"/>
+  <ellipse cx="520" cy="554" rx="92" ry="23" fill="#13202e"/>
+  <path d="M434 556c20-16 60-24 100-22 34 2 58 8 78 22-22 14-56 20-92 20-40 0-70-6-86-20z" fill="#44596f" opacity=".9"/>
+  <!-- cones -->
+  <g><path d="M388 598l16-44 16 44z" fill="#f2b01e"/><rect x="378" y="596" width="52" height="9" rx="2" fill="#0c2d52"/><rect x="394" y="570" width="20" height="7" fill="#fff"/></g>
+  <g><path d="M640 598l14-38 14 38z" fill="#f2b01e"/><rect x="630" y="596" width="48" height="9" rx="2" fill="#0c2d52"/><rect x="645" y="574" width="18" height="6" fill="#fff"/></g>
+  <!-- worker -->
+  <g>
+    <rect x="484" y="500" width="30" height="62" rx="6" fill="#f2b01e"/><rect x="484" y="522" width="30" height="7" fill="#fff" opacity=".8"/>
+    <rect x="488" y="556" width="10" height="34" rx="3" fill="#0c2d52"/><rect x="502" y="556" width="10" height="34" rx="3" fill="#0c2d52"/>
+    <circle cx="499" cy="486" r="13" fill="#7a4a2b"/>
+    <path d="M484 484a15 15 0 0 1 30 0z" fill="#f2b01e"/><rect x="480" y="482" width="38" height="5" rx="2" fill="#d99a10"/>
+    <path d="M512 516 560 548" stroke="#7b8794" stroke-width="6" stroke-linecap="round"/><path d="M552 540l22 14-14 14-14-10z" fill="#9aa7b5"/>
+  </g>
+  <!-- street light -->
+  <g transform="translate(-760 0)"><rect x="1010" y="236" width="10" height="224" fill="#0c2d52"/><path d="M1015 240c0-30-30-40-70-34" fill="none" stroke="#0c2d52" stroke-width="9" stroke-linecap="round"/><rect x="920" y="200" width="48" height="14" rx="6" fill="#0c2d52"/><path d="M926 214h36l16 70H910z" fill="#f9d56e" opacity=".22"/><rect x="1000" y="456" width="30" height="10" rx="2" fill="#0c2d52"/></g>
+  <!-- hydrant -->
+  <g><rect x="148" y="402" width="36" height="56" rx="8" fill="#1a5fa8"/><rect x="142" y="410" width="48" height="10" rx="3" fill="#0c2d52"/><path d="M148 404a18 18 0 0 1 36 0z" fill="#0c2d52"/><rect x="134" y="428" width="14" height="14" rx="3" fill="#0c2d52"/><rect x="184" y="428" width="14" height="14" rx="3" fill="#0c2d52"/></g>
+  <!-- phone with report -->
+  <g transform="rotate(-6 960 440)">
+    <rect x="860" y="300" width="190" height="330" rx="26" fill="#0c2d52"/>
+    <rect x="871" y="313" width="168" height="304" rx="17" fill="#fff"/>
+    <rect x="930" y="320" width="50" height="7" rx="3.5" fill="#0c2d52"/>
+    <rect x="871" y="336" width="168" height="46" fill="#1a5fa8"/>
+    <text x="887" y="365" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#fff">Service request</text>
+    <rect x="886" y="398" width="138" height="12" rx="6" fill="#dbe9f8"/><rect x="886" y="420" width="104" height="12" rx="6" fill="#dbe9f8"/>
+    <rect x="886" y="448" width="138" height="56" rx="10" fill="#eaf3fc"/>
+    <path d="M900 492l18-22 14 14 12-10 20 18z" fill="#9fc2e6"/><circle cx="912" cy="466" r="6" fill="#f2b01e"/>
+    <circle cx="905" cy="548" r="17" fill="#2e8b57"/><path d="M896 548l7 8 12-15" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="931" y="538" width="82" height="9" rx="4.5" fill="#0c2d52"/><rect x="931" y="554" width="58" height="8" rx="4" fill="#9fb9d4"/>
+    <rect x="886" y="580" width="138" height="24" rx="12" fill="#f2b01e"/>
+  </g>
+  <!-- reference chip -->
+  <g transform="translate(-26 8)"><rect x="700" y="318" width="214" height="44" rx="22" fill="#fff" stroke="#c3d6ea"/><circle cx="724" cy="340" r="10" fill="#2e8b57"/><path d="M719 340l4 4 7-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="744" y="346" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#0c2d52">PSR-2026-000124</text></g>
+</svg>
