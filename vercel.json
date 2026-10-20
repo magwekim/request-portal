@@ -1,5 +1,5 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
+  "rewrites": [{ "source": "/:path*", "destination": "/api/index?__path=:path*" }],
   "headers": [
     { "source": "/static/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }] }
   ],
