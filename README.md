@@ -18,12 +18,12 @@ Flask + PostgreSQL, plain HTML/CSS/JS, no build step. Runs locally and on Vercel
 
 ## Run locally
 
-Requires Python 3.10+ and PostgreSQL (`docker compose up -d` starts one that matches `.env.example`).
+Requires Python 3.10+ and PostgreSQL
 
 ```bash
 python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env          # set DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
+cp .env
 python run.py                 # http://127.0.0.1:5000
 ```
 
