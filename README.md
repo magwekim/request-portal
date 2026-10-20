@@ -232,6 +232,7 @@ portal/                 the application
 
 tests/test_portal.py    the automated tests
 ```
+<<<<<<< HEAD
 
 ## Changing the pictures
 
@@ -260,6 +261,8 @@ Because the Content-Security-Policy blocks inline styles, the dashboard charts a
 SVG styled by CSS classes. Don't add `style="..."` attributes to templates; add a class to
 `style.css` instead.
 
+=======
+>>>>>>> 9ee071655616ea4a592fdde34576daa5ba1389be
 ## What it doesn't do (yet)
 
 This is a first version. There are no payments, SMS or email notifications, links to outside
