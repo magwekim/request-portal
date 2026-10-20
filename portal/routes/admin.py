@@ -1,6 +1,9 @@
 """Administrator pages: dashboard, requests, assignment, users, departments, categories, audit."""
 
-from flask import (Blueprint, abort, current_app, flash, g, redirect, render_template, request,
+import csv
+import io
+
+from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, render_template, request,
                    url_for)
 
 from .. import accounts, database, queries, utils, workflow
@@ -31,7 +34,9 @@ def dashboard():
     recent = db.execute(f"SELECT {REQUEST_LIST_COLUMNS} FROM {REQUEST_FROM} "
                         "ORDER BY r.created_at DESC, r.id DESC LIMIT 5").fetchall()
     return render_template("admin/dashboard.html", stats=stats, unassigned=unassigned,
-                           by_department=queries.stats_by_department(db), recent=recent)
+                           by_department=queries.stats_by_department(db),
+                           by_category=queries.stats_by_category(db),
+                           avg_hours=queries.average_resolution_hours(db), recent=recent)
 
 
 @bp.route("/requests")
@@ -46,6 +51,35 @@ def all_requests():
         departments=db.execute("SELECT id, name FROM departments ORDER BY name").fetchall(),
         categories=db.execute("SELECT id, name, department_id FROM request_categories "
                               "ORDER BY name").fetchall())
+
+
+def _csv_safe(value):
+    """Stop spreadsheet programs from running a cell that starts with = + - or @ as a formula."""
+    text = "" if value is None else str(value)
+    return "'" + text if text[:1] in ("=", "+", "-", "@") else text
+
+
+@bp.route("/requests/export.csv")
+@role_required("admin")
+def export_requests():
+    """Download the requests that match the current filters as a CSV file."""
+    db = get_db()
+    where, params, _ = queries.request_filters(request.args)
+    rows = db.execute(
+        f"SELECT r.reference_number, r.title, c.name AS category, d.name AS department, "
+        f"r.location, r.status, u.full_name AS resident, o.full_name AS officer, "
+        f"r.created_at, r.resolved_at FROM {REQUEST_FROM} WHERE {where} "
+        f"ORDER BY r.created_at DESC, r.id DESC", params).fetchall()
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["Reference", "Title", "Category", "Department", "Location", "Status",
+                     "Resident", "Assigned officer", "Submitted (UTC)", "Resolved (UTC)"])
+    for r in rows:
+        writer.writerow([_csv_safe(r[key]) for key in (
+            "reference_number", "title", "category", "department", "location", "status",
+            "resident", "officer", "created_at", "resolved_at")])
+    return Response(out.getvalue(), mimetype="text/csv", headers={
+        "Content-Disposition": "attachment; filename=service-requests.csv"})
 
 
 @bp.route("/requests/<int:request_id>")
@@ -122,14 +156,9 @@ def assign(request_id):
                    "assigned_officer_id = ? WHERE id = ?",
                    (dept_id, cat_id, new_officer_id, request_id))
         workflow.audit(db, g.user["id"], "request_assigned", "service_request", request_id, note)
-        if officer and req["status"] in ("Submitted", "Under Review"):
-            workflow.change_status(db, req, "Assigned", g.user, internal_note=note)
-        elif not officer and req["status"] == "Assigned":
-            workflow.change_status(db, req, "Under Review", g.user, internal_note=note)
-        else:
-            workflow.add_history(db, request_id, g.user["id"], req["status"], req["status"],
-                                 None, note)
-            workflow.touch_request(db, request_id)
+        workflow.add_history(db, request_id, g.user["id"], req["status"], req["status"],
+                             None, note)
+        workflow.touch_request(db, request_id)
         db.commit()
         flash("Assignment saved.", "success")
     except workflow.WorkflowError as exc:

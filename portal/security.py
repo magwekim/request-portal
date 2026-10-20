@@ -2,6 +2,7 @@
 login / role decorators that guard every protected page."""
 import hmac
 import os
+import random
 import re
 import secrets
 import time
@@ -54,24 +55,26 @@ def check_csrf():
                                "Please go back, reload the page and try again.")
 
 
-# Rate limiting ------------------------------------------------------------------------------
+# Rate limiting
 # Attempts are saved in the "rate_limits" table (not in memory) because Vercel can run each
 # request on a different server, and memory is not shared between them.
 
 def is_rate_limited(key, limit, window):
     """True if `key` already made `limit` or more attempts in the last `window` seconds."""
-    db = get_db()
-    oldest_allowed = time.time() - window
-    db.execute("DELETE FROM rate_limits WHERE key = ? AND attempted_at < ?", (key, oldest_allowed))
-    count = db.execute("SELECT COUNT(*) AS n FROM rate_limits WHERE key = ?", (key,)).fetchone()["n"]
-    db.commit()
+    count = get_db().execute(
+        "SELECT COUNT(*) AS n FROM rate_limits WHERE key = ? AND attempted_at >= ?",
+        (key, time.time() - window)).fetchone()["n"]
     return count >= limit
 
 
-def record_attempt(key):
-    """Remember one more attempt for `key` (saved straight away)."""
+def record_attempt(*keys):
+    """Remember one more attempt for each key (one query, saved straight away)."""
     db = get_db()
-    db.execute("INSERT INTO rate_limits (key, attempted_at) VALUES (?, ?)", (key, time.time()))
+    now = time.time()
+    db.execute("INSERT INTO rate_limits (key, attempted_at) VALUES " + ", ".join(["(?, ?)"] * len(keys)),
+               tuple(v for k in keys for v in (k, now)))
+    if random.random() < 0.02:            # now and then, forget attempts older than a day
+        db.execute("DELETE FROM rate_limits WHERE attempted_at < ?", (now - 86400,))
     db.commit()
 
 

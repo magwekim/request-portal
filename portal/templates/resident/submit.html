@@ -9,43 +9,37 @@
   {{ csrf() }}
   <fieldset>
     <legend>1. What is the problem?</legend>
-    <div class="form-row">
-      <div class="field{% if errors.department_id %} has-error{% endif %}">
-        <label for="department_id">Department <span class="req">*</span></label>
-        <select id="department_id" name="department_id" required data-dept-source="category_id">
-          <option value="">Select a department</option>
-          {% for d in departments %}<option value="{{ d.id }}" {% if form.get('department_id') == d.id|string %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
-        </select>
-        {% if errors.department_id %}<p class="error-text" role="alert">{{ errors.department_id }}</p>{% endif %}
-      </div>
-      <div class="field{% if errors.category_id %} has-error{% endif %}">
-        <label for="category_id">Request category <span class="req">*</span></label>
-        <select id="category_id" name="category_id" required>
-          <option value="">Select a category</option>
-          {% for c in categories %}<option value="{{ c.id }}" data-dept="{{ c.department_id }}" {% if form.get('category_id') == c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
-        </select>
-        {% if errors.category_id %}<p class="error-text" role="alert">{{ errors.category_id }}</p>{% endif %}
-      </div>
+    <div class="field{% if errors.category_id %} has-error{% endif %}">
+      <label for="category_id">Category <span class="req" title="required">*</span></label>
+      <select id="category_id" name="category_id" required>
+        <option value="">Select a category (streetlight, water, garbage...)</option>
+        {% for dept, items in categories|groupby('department') %}
+        <optgroup label="{{ dept }}">
+          {% for c in items %}<option value="{{ c.id }}" {% if form.get('category_id') == c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </optgroup>
+        {% endfor %}
+      </select>
+      {% if errors.category_id %}<p class="error-text" role="alert">{{ errors.category_id }}</p>{% endif %}
     </div>
-    {{ field('title', 'Request title', form, errors, maxlength=150, help='A short summary, 5 to 150 characters.') }}
+    {{ field('location', 'Location', form, errors, maxlength=200, help='Street, estate, landmark or ward, so a crew can find it.') }}
     <div class="field{% if errors.description %} has-error{% endif %}">
-      <label for="description">Detailed description <span class="req">*</span></label>
+      <label for="description">Description <span class="req" title="required">*</span></label>
       <textarea id="description" name="description" rows="5" required maxlength="5000">{{ form.get('description', '') }}</textarea>
-      <p class="hint">What happened, since when, and how it affects you (20 to 5000 characters).</p>
+      <p class="hint">What is wrong, since when, and how it affects you.</p>
       {% if errors.description %}<p class="error-text" role="alert">{{ errors.description }}</p>{% endif %}
     </div>
   </fieldset>
   <fieldset>
-    <legend>2. Where and evidence</legend>
-    {{ field('location', 'Location (optional)', form, errors, required=False, maxlength=200, help='Street, estate, landmark or ward.') }}
-    {{ file_input('Supporting evidence (optional)', errors.evidence) }}
+    <legend>2. Add a photo (optional)</legend>
+    {{ file_input('Photo of the problem', errors.evidence) }}
+    {{ field('title', 'Short title (optional)', form, errors, required=False, maxlength=150, help='Leave blank and we will write one from the category and location.') }}
   </fieldset>
   <button type="submit" class="btn">Submit request</button>
 </form>
 <aside class="card">
   <h2>Before you submit</h2>
   <ul class="tips">
-    <li>Pick the department that handles the problem; the category list updates to match.</li>
+    <li>Pick the category that fits best. It is sent to the right department automatically.</li>
     <li>Say exactly where it is. A street name or landmark helps the officer find it.</li>
     <li>A clear photo of the problem can speed things up. Photos from your phone are fine.</li>
     <li>You will get a reference number. Keep it to track the request.</li>

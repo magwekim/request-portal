@@ -1,269 +1,119 @@
 # Public Service Request Portal
 
-Ever reported a burst pipe or a pothole and wondered whether anyone actually read it? This app is
-built for exactly that. A resident tells the county what's broken, gets a reference number, and
-can watch the request move along until someone resolves it. On the other side, officers work
-through their department's queue and administrators keep everything in order.
+Residents report problems such as a broken streetlight, a water fault or missed garbage
+collection, get a reference number, and follow the request until it is resolved. Department
+officers work through their queue and administrators oversee everything.
 
-It's a small Flask app on PostgreSQL, with plain HTML, CSS and a little JavaScript. There's no
-front-end framework and no build step. It runs on your own computer and on Vercel.
+Flask + PostgreSQL, plain HTML/CSS/JS, no build step. Runs locally and on Vercel.
 
----
+## How it meets the brief
 
-## Run it on your computer
+| Requirement | Where |
+|-------------|-------|
+| Citizen registration and login | `/register`, `/login` (hashed passwords, CSRF protection, rate limiting) |
+| Submit a request: category, location, description, optional image | **New request**. Category, location and description are required; a photo is optional. The department is chosen from the category. |
+| Admin dashboard | **Dashboard**, plus Requests (search, filter, CSV export), Assignments, Users, Departments, Categories, Audit log |
+| Status tracking: Pending → In Progress → Resolved | Three-step tracker on every request and on the public **Track** page |
+| Basic analytics: open vs resolved | Dashboard totals, resolution rate and an open vs resolved chart, plus average time to resolve, top categories and workload per department |
 
-You need Python 3.10 or newer and a PostgreSQL database. A free hosted one from Neon or Supabase
-is the easiest option, though a local install works just as well.
+## Run locally
+
+Requires Python 3.10+ and PostgreSQL (`docker compose up -d` starts one that matches `.env.example`).
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-cp .env.example .env               # Windows: copy .env.example .env
+cp .env.example .env          # set DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
+python run.py                 # http://127.0.0.1:5000
 ```
 
-Open `.env` and set `DATABASE_URL` to your database, for example
-`postgresql://user:password@localhost:5432/service_requests`. Then start the app:
+The first start creates the tables, starter departments and categories, and the first
+administrator from `.env`. The database user must be allowed to run `CREATE EXTENSION citext`
+(hosted providers allow it).
 
-```bash
-python run.py
-```
+Public sign-up only creates residents. Sign in as the administrator and create officers from
+the **Users** page.
 
-Visit http://127.0.0.1:5000. The first start creates the tables and five starter departments, so
-there's nothing else to set up.
+## Roles
 
-One catch: your database user must be allowed to run `CREATE EXTENSION citext` (it's what makes
-emails and names case-insensitive). Hosted providers allow it. On a local install, run
-`CREATE EXTENSION citext;` once if you hit a permission error.
+- **Resident**: submits requests, attaches up to 3 files, tracks their own requests, answers when more information is requested.
+- **Officer**: handles their department's requests (claim, change status, reply publicly, add private notes).
+- **Administrator**: sees everything; assigns requests; manages users, departments and categories; reads the audit log.
 
-## Signing in for the first time
+The server enforces every rule; hiding a button is never the only protection.
 
-Nobody can sign up as an officer or administrator from the website. The public sign-up page only
-ever creates residents. Staff accounts come from one of these:
+## Request statuses
 
-Put `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` before you set up the database.
-If no administrator exists yet, one is created from those values. Sign in, then add your officers
-from the **Users** page.
-
-**Prefer the command line?**
-
-```bash
-flask --app portal create-admin              # a new administrator
-flask --app portal create-department-admin   # a department officer, made on an admin's behalf
-```
-
-## Who can do what
-
-There are three kinds of people, and the server checks every rule below. Hiding a button is never
-the only protection.
-
-**Residents** submit requests, attach up to three files, follow their own requests and answer
-when an officer asks for more details. They can't see anyone else's requests, and they never see
-internal notes.
-
-**Department officers** work on one department's requests: the ones assigned to them, plus the
-unassigned ones in their department. They can claim a request, change its status, reply to the
-resident and leave private notes for colleagues. They can't reassign requests or manage users.
-
-**Administrators** see everything, including a dashboard with basic analytics: totals, open vs
-resolved cases (donut chart and percentages), and workload per department. They create officers and other administrators, manage
-departments and categories, assign requests, switch accounts on or off and read the audit log.
-An administrator can't deactivate their own account, so nobody gets locked out by accident.
-
-### How a request moves along
-
-A status can only follow the paths below. Anything else is refused.
+Every request follows **Pending → In Progress → Resolved**, with two side branches:
+*Awaiting Information* (officer needs something from the resident) and *Rejected* (closed with a reason).
 
 | From | Can go to |
 |------|-----------|
-| Submitted | Under Review, Assigned, Rejected |
-| Under Review | Assigned, Awaiting Information, In Progress, Rejected |
-| Assigned | Under Review, Awaiting Information, In Progress, Rejected |
-| Awaiting Information | Under Review (when the resident replies), In Progress, Rejected |
-| In Progress | Awaiting Information, Resolved, Rejected |
-| Resolved, Rejected | nowhere, they're final |
+| Pending | In Progress, Awaiting Information, Rejected |
+| In Progress | Resolved, Awaiting Information, Rejected |
+| Awaiting Information | Pending (when the resident replies), In Progress, Rejected |
+| Resolved, Rejected | final |
 
-Two small rules keep things honest. Resolving a request needs resolution details, and rejecting
-one (or asking for more information) needs a message the resident can read. Every change is saved
-in the request's history with who made it and when. Residents see a simpler three-step tracker
-(Pending, In Progress, Resolved), so they aren't buried in internal statuses.
-
-## Take it for a spin
-
-1. Register a resident account and sign in, choose **New request**, fill it in and submit. Note the
-   reference number, something like `PSR-2026-000003`.
-2. Sign in as your administrator, open **Assignments** and give the request to the department's
-   officer. Its status becomes *Assigned*.
-3. Sign in as that officer. Mark it *In Progress*, post a public reply, add a private note, or ask
-   the resident for more details.
-4. Back as the resident, answer the question. The request returns to *Under Review*.
-5. As the officer, finish with *Resolved* (say what was done) or *Rejected* (say why).
-6. Anyone can check progress on the **Track** page with the reference number and the email address
-   the request was submitted under.
+Resolving needs resolution details; rejecting or asking for information needs a message the
+resident can read. Assigning an officer does not change the status. Every change is stored in
+the request history.
 
 ## Settings
 
-Only `DATABASE_URL` is needed on your own computer. The app reads `.env` if it's there, and real
-environment variables always win over it.
+Real environment variables win over `.env`.
 
-| Variable | What it does | Default |
-|----------|--------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string. **Required.** | none |
-| `APP_ENV` | `development` or `production` | development |
-| `SECRET_KEY` | Signs session cookies. **Required in production.** | a random key made at each start |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | The first administrator, created only if none exists | not set |
-| `REF_PREFIX` | Prefix for reference numbers | `PSR` |
-| `APP_NAME`, `COUNTY_NAME` | Names shown in the header and footer | Public Service Request Portal, County Government |
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `DATABASE_URL` | PostgreSQL connection string (**required**) | none |
+| `SECRET_KEY` | Signs sessions (**required in production**) | random per start |
+| `APP_ENV` | `development` or `production` (Vercel counts as production) | development |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | First administrator, created only if none exists | none |
+| `REF_PREFIX`, `APP_NAME`, `COUNTY_NAME` | Reference prefix and display names | `PSR`, Public Service Request Portal, County Government |
 | `PORT` | Port for `python run.py` | 5000 |
-| `SESSION_COOKIE_SECURE` | `1` sends the cookie over HTTPS only (always on in production) | off in development |
 
-To make a good `SECRET_KEY`:
+Generate a key with `python -c "import secrets; print(secrets.token_hex(32))"`.
 
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
+## Deploy on Vercel
 
-## Putting it on Vercel
+1. Create a PostgreSQL database (Neon, Supabase or Vercel Storage) and copy its connection string (the pooled one if offered).
+2. From your computer, with `DATABASE_URL`, `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`, run once:
+   `flask --app portal init-db`. In production the app never creates tables itself.
+3. Push to GitHub and import the project in Vercel.
+4. Add environment variables `SECRET_KEY` and `DATABASE_URL`, then deploy.
 
-Vercel runs the app as a serverless function with no permanent disk. That's why both the data and
-the uploaded files live in PostgreSQL. `api/index.py` and `vercel.json` tell Vercel how to start
-the app.
+Notes: Vercel rejects requests over 4.5 MB, so attachments are limited to 1.3 MB each (large
+photos are shrunk in the browser; see `MAX_FILE_BYTES` in `portal/__init__.py`). Uploaded files
+are stored in PostgreSQL, and rate limits are kept there too, so back the database up.
 
-1. **Create a PostgreSQL database** (Neon, Supabase, or Vercel's Storage tab) and copy its
-   connection string. If there's a "pooled" one, use that.
-2. **Set up the tables once, from your own computer.** Put the connection string in `.env` as
-   `DATABASE_URL`, add `ADMIN_EMAIL` and `ADMIN_PASSWORD`, then run:
-   ```bash
-   flask --app portal init-db
-   ```
-   This creates the tables, the starter departments and your first administrator. It's safe to
-   run again. In production the app never does this by itself, so no visitor ever waits for it.
-3. **Push the project to GitHub** and import it in Vercel (Add New, then Project).
-4. **Add environment variables** under Project Settings, then Environment Variables:
+## Troubleshooting
 
-   | Name | Value |
-   |------|-------|
-   | `APP_ENV` | `production` |
-   | `SECRET_KEY` | a long random value |
-   | `DATABASE_URL` | your PostgreSQL connection string |
+- **"Set the DATABASE_URL environment variable"**: `.env` is missing, misnamed or empty.
+- **`citext` permission error**: run `CREATE EXTENSION citext;` once as a database owner.
+- **500 on every Vercel page**: check the function logs; usually a missing `SECRET_KEY` or `DATABASE_URL`, or `init-db` was never run.
+- **Signed out on every restart locally**: set `SECRET_KEY` in `.env`.
+- **See the real error locally**: `FLASK_DEBUG=1 python run.py`.
 
-   `ADMIN_EMAIL` and `ADMIN_PASSWORD` were only needed for step 2, so they don't have to go on
-   Vercel.
-5. **Deploy**, sign in as the administrator and add your officers.
+## Security
 
-Worth knowing:
+Hashed passwords, HttpOnly/SameSite cookies, CSRF tokens on every form, parameterised SQL,
+escaped templates, a strict Content-Security-Policy, uploads limited to PDF/PNG/JPG and checked
+by extension and file signature, permission-checked downloads, rate-limited sign-in/tracking/
+registration, and an audit log of administrative actions.
 
-- Vercel rejects requests bigger than 4.5 MB, so attachments are limited to 1.3 MB each and 4 MB
-  per submission (`MAX_FILE_BYTES` in `portal/__init__.py`). The upload form shrinks large phone photos in
-  the browser automatically (PDFs over the limit are refused). If
-  you outgrow this, move files to object storage such as S3.
-- Rate limiting is kept in the database, so it still works when Vercel uses a different server
-  for every request.
-- Back up the database. It holds everything, uploaded files included.
-
-## When something breaks
-
-- **"Set the DATABASE_URL environment variable"**: the app can't find your `.env`, or the value is
-  empty. Check that the file is named `.env` (not `.env.example`) and sits next to `run.py`.
-- **A `citext` permission error on start**: see the note under "Run it on your computer".
-- **Every Vercel page shows a 500 error**: check the function logs in Vercel first. The usual
-  causes are a missing `SECRET_KEY` or `DATABASE_URL`, or tables that were never created (run
-  `flask --app portal init-db` against the production database).
-- **You keep getting signed out locally**: with no `SECRET_KEY` set, a new random one is made on
-  every restart. Put one in `.env`.
-- **To see the real error behind a 500 page**: run `FLASK_DEBUG=1 python run.py` (on Windows
-  PowerShell: `$env:FLASK_DEBUG=1; python run.py`). The terminal prints the full traceback. The
-  error pages shown to visitors never include it, on purpose.
-
-## Security, briefly
-
-Passwords are hashed. Sessions use `HttpOnly` and `SameSite=Lax` cookies and are reset at
-sign-in. Every form carries a CSRF token, all SQL is parameterised, and templates escape their
-output while a strict Content-Security-Policy blocks inline scripts. Uploads must be PDF, PNG or
-JPG, are checked by extension and by file signature, are capped at 1.3 MB each, and are only
-handed out as downloads after a permission check. Sign-in, tracking, registration and password
-changes are rate limited. Administrative and workflow actions go into an audit log, and error
-pages never reveal SQL, file paths or secrets.
-
-## Tests
-
-The tests need an empty PostgreSQL database that they're allowed to **erase**. Never point them
-at your real one.
-
-```bash
-TEST_DATABASE_URL=postgresql://user:pass@localhost/psr_test python -m unittest discover -s tests -v
-```
-
-There are 57 tests and they take about a minute (password hashing is slow on purpose). Each one
-starts from an emptied database and uses made-up data. They cover registration and sign-in,
-submitting requests, who can see what, assignments and status rules, public replies versus
-private notes, CSRF, SQL injection and XSS attempts, upload safety, dashboard numbers,
-pagination, rate limiting, tracking and audit logging.
-
-## Where things live
+## Project layout
 
 ```
-run.py                  starts the development server
-api/index.py            the entry point Vercel uses
-vercel.json             sends every URL to api/index.py
-requirements.txt        Flask and psycopg (the PostgreSQL driver)
-.env.example            copy to .env and adjust
-
-portal/                 the application
-  __init__.py           create_app(): settings, security headers, error pages
-  database.py           the PostgreSQL connection, first-time setup, creating staff accounts
-  schema.sql            tables, constraints and indexes
-  security.py           password rules, CSRF, rate limiting, sign-in and role guards
-  workflow.py           roles, statuses, allowed moves, permissions, audit trail
-  queries.py            reusable SQL for listing, filtering and counting requests
-  accounts.py           validating and creating users
-  uploads.py            checking and saving attachments
-  utils.py              small input-cleaning helpers
-  cli.py                the flask commands (init-db, create-admin, ...)
-  routes/
-    public.py           home, sign-in, register, track, profile
-    resident.py         resident dashboard, new request, request list and detail
-    officer.py          officer pages, request processing, attachment downloads
-    admin.py            dashboard, assignments, users, departments, categories, audit log
-  templates/            Jinja2 pages: auth/, resident/, officer/, admin/, errors/
-                        (_macros.html holds shared pieces: badges, tables, form fields)
-  static/               css/, js/ and img/
-
-tests/test_portal.py    the automated tests
+run.py, api/index.py     local server and Vercel entry point
+vercel.json              routes every URL to api/index.py
+portal/
+  __init__.py            app factory: settings, security headers, error pages
+  database.py            PostgreSQL access, first-time setup, staff accounts
+  schema.sql             tables, constraints, indexes (and upgrade for older databases)
+  workflow.py            statuses, allowed transitions, permissions, audit trail
+  security.py            passwords, CSRF, rate limiting, login/role guards
+  queries.py             shared SQL for listing, filtering and analytics
+  accounts.py, uploads.py, utils.py, cli.py
+  routes/                public, resident, officer, admin
+  templates/             Jinja pages (_macros.html holds shared pieces)
+public/static/           css, js, img (served by Vercel's CDN)
 ```
-<<<<<<< HEAD
-
-## Changing the pictures
-
-The pictures that ship with the portal are SVG illustrations. Each image is an ordinary `<img>`
-tag marked with an `<!-- IMAGE: ... -->` comment in the templates. To use your own, replace the
-file in `portal/static/img/` (a photo works too, but then change the extension in the template,
-for example `hero.svg` to `hero.jpg`).
-
-| File | Used in | Suggested size |
-|------|---------|----------------|
-| `logo.svg` | header and browser tab (`base.html`) | square |
-| `hero.svg`, `how-it-works.svg` | `home.html` | 1200 x 675 |
-| `role-resident.svg`, `role-officer.svg`, `role-admin.svg` | `home.html` | 800 x 450 |
-| `auth.svg` | sign-in and register pages, wide screens only | 800 x 1000 |
-| `track.svg` | `track.html` | 1600 x 460 |
-
-Photos residents attach to a request appear as thumbnails on the request page (`/attachments/<id>/view`)
-and open in a viewer; PDFs stay download-only.
-
-Keep each photo under about 500 KB and update the `alt` text to describe your picture. The colours are
-at the top of `portal/static/css/style.css`. The most recent design tweaks (header, dashboard cards,
-charts, responsive tables) are in the "Design refresh" section at the end of that file, and its
-colour variables override the ones at the top.
-
-Because the Content-Security-Policy blocks inline styles, the dashboard charts are drawn as inline
-SVG styled by CSS classes. Don't add `style="..."` attributes to templates; add a class to
-`style.css` instead.
-
-=======
->>>>>>> 9ee071655616ea4a592fdde34576daa5ba1389be
-## What it doesn't do (yet)
-
-This is a first version. There are no payments, SMS or email notifications, links to outside
-government systems, or advanced analytics.

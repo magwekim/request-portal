@@ -51,8 +51,7 @@ def login():
         session.permanent = True
         flash(f"Welcome back, {user['full_name']}.", "success")
         return redirect(next_url or url_for("public.dashboard"))
-    security.record_attempt(key_user)
-    security.record_attempt(key_ip)
+    security.record_attempt(key_user, key_ip)
     flash("Invalid email or password.", "error")
     return render_template("auth/login.html", form={"email": email}, errors={},
                            next_url=next_url), 401

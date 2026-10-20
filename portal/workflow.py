@@ -10,8 +10,10 @@ from .database import utcnow
 ROLES = ("resident", "officer", "admin")
 
 
-STATUSES = ["Submitted", "Under Review", "Assigned", "Awaiting Information",
-            "In Progress", "Resolved", "Rejected"]
+# The citizen-facing flow is  Pending -> In Progress -> Resolved.
+# "Awaiting Information" (waiting for the resident) and "Rejected" (closed without a fix)
+# are side branches an officer can use when needed.
+STATUSES = ["Pending", "In Progress", "Awaiting Information", "Resolved", "Rejected"]
 
 
 TERMINAL_STATUSES = ("Resolved", "Rejected")
@@ -19,11 +21,9 @@ TERMINAL_STATUSES = ("Resolved", "Rejected")
 
 # Server-side workflow: current status -> statuses it may move to.
 TRANSITIONS = {
-    "Submitted": ("Under Review", "Assigned", "Rejected"),
-    "Under Review": ("Assigned", "Awaiting Information", "In Progress", "Rejected"),
-    "Assigned": ("Under Review", "Awaiting Information", "In Progress", "Rejected"),
-    "Awaiting Information": ("Under Review", "In Progress", "Rejected"),
-    "In Progress": ("Awaiting Information", "Resolved", "Rejected"),
+    "Pending": ("In Progress", "Awaiting Information", "Rejected"),
+    "In Progress": ("Resolved", "Awaiting Information", "Rejected"),
+    "Awaiting Information": ("Pending", "In Progress", "Rejected"),
     "Resolved": (),
     "Rejected": (),
 }
@@ -83,13 +83,12 @@ PROGRESS_STEPS = ["Pending", "In Progress", "Resolved"]
 
 
 def progress_step(status):
-    """Map the detailed status to the simple Pending -> In Progress -> Resolved tracker.
-    Returns the 0-based step index, or None for Rejected (a closed, non-resolved outcome)."""
+    """Position of a status on the Pending -> In Progress -> Resolved tracker (0, 1 or 2).
+    "Awaiting Information" counts as the step the request was on (Pending); Rejected is a
+    closed, non-resolved outcome and returns None."""
     if status == "Rejected":
         return None
-    if status == "Resolved":
-        return 2
-    return 1 if status == "In Progress" else 0
+    return {"In Progress": 1, "Resolved": 2}.get(status, 0)
 
 
 def create_service_request(db, resident_id, department_id, category_id,
@@ -99,14 +98,14 @@ def create_service_request(db, resident_id, department_id, category_id,
     cur = db.execute(
         "INSERT INTO service_requests (reference_number, resident_id, department_id, category_id, "
         "title, description, location, status, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, 'Submitted', ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)",
         (f"TMP-{uuid.uuid4().hex}", resident_id, department_id, category_id,
          title, description, location or None, now, now))
     request_id = cur.lastrowid
     reference = f"{current_app.config['REF_PREFIX']}-{now[:4]}-{request_id:06d}"
     db.execute("UPDATE service_requests SET reference_number = ? WHERE id = ?",
                (reference, request_id))
-    add_history(db, request_id, resident_id, None, "Submitted")
+    add_history(db, request_id, resident_id, None, "Pending")
     audit(db, resident_id, "request_submitted", "service_request", request_id, reference)
     return request_id, reference
 

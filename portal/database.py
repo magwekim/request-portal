@@ -49,7 +49,7 @@ def hash_password(password):
         return generate_password_hash(password, method="pbkdf2:sha256")
 
 
-# --- A small wrapper that gives psycopg the simple interface described above ---------------
+# A small wrapper that gives psycopg the simple interface described above
 
 class Row(dict):
     """One result row. Works as row["name"] and as row[0], and dict(row) works too."""
@@ -167,7 +167,7 @@ def init_db(app):
         db.close()
 
 
-# User accounts ------------------------------------------------------------------------------
+# User accounts
 # The first administrator is created by init_db from ADMIN_EMAIL / ADMIN_PASSWORD when none
 # exists. After that, administrators add officers and more administrators from the Users page.
 # Public sign-up can only ever create residents.

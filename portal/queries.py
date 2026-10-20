@@ -74,7 +74,7 @@ def request_stats(db, where="1=1", params=()):
     row = db.execute(
         f"""SELECT COUNT(*) AS total,
                    COUNT(*) FILTER (WHERE r.status NOT IN ('Resolved','Rejected')) AS open_cases,
-                   COUNT(*) FILTER (WHERE r.status IN ('Submitted','Under Review','Assigned')) AS pending,
+                   COUNT(*) FILTER (WHERE r.status = 'Pending') AS pending,
                    COUNT(*) FILTER (WHERE r.status = 'Awaiting Information') AS awaiting_info,
                    COUNT(*) FILTER (WHERE r.status = 'In Progress') AS in_progress,
                    COUNT(*) FILTER (WHERE r.status = 'Resolved') AS resolved,
@@ -92,3 +92,22 @@ def stats_by_department(db):
         entry["counts"][row["status"]] = row["n"]
         entry["total"] += row["n"]
     return list(table.values())
+
+
+def stats_by_category(db, limit=6):
+    """The categories with the most requests, each split into open and closed counts."""
+    return db.execute(
+        """SELECT c.name, COUNT(*) AS total,
+                  COUNT(*) FILTER (WHERE r.status NOT IN ('Resolved','Rejected')) AS open_cases
+           FROM service_requests r JOIN request_categories c ON c.id = r.category_id
+           GROUP BY c.id, c.name ORDER BY total DESC, c.name LIMIT ?""", (limit,)).fetchall()
+
+
+def average_resolution_hours(db):
+    """Average hours from submission to resolution (None until something is resolved)."""
+    fmt = "'YYYY-MM-DD HH24:MI:SS'"
+    row = db.execute(
+        f"""SELECT AVG(EXTRACT(EPOCH FROM (to_timestamp(resolved_at, {fmt})
+                                         - to_timestamp(created_at, {fmt})))) / 3600 AS hours
+            FROM service_requests WHERE status = 'Resolved' AND resolved_at IS NOT NULL""").fetchone()
+    return float(row["hours"]) if row["hours"] is not None else None

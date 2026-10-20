@@ -1,13 +1,24 @@
 # Secrets and local configuration
 .env
+.env.*
+!.env.example
 
 # Python
 __pycache__/
 *.pyc
 .venv/
 venv/
-.pytest_cache/
 nohup.out
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# Operating system files
+.DS_Store
+Thumbs.db
 
 # Vercel
 .vercel/

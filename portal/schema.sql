@@ -50,9 +50,8 @@ CREATE TABLE IF NOT EXISTS service_requests (
     title               TEXT NOT NULL,
     description         TEXT NOT NULL,
     location            TEXT,
-    status              TEXT NOT NULL DEFAULT 'Submitted' CHECK (status IN (
-        'Submitted', 'Under Review', 'Assigned', 'Awaiting Information',
-        'In Progress', 'Resolved', 'Rejected')),
+    status              TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN (
+        'Pending', 'In Progress', 'Awaiting Information', 'Resolved', 'Rejected')),
     resolution_details  TEXT,
     created_at          TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
     updated_at          TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
@@ -70,8 +69,7 @@ CREATE TABLE IF NOT EXISTS request_history (
     changed_by     INTEGER NOT NULL REFERENCES users (id),
     old_status     TEXT,
     new_status     TEXT NOT NULL CHECK (new_status IN (
-        'Submitted', 'Under Review', 'Assigned', 'Awaiting Information',
-        'In Progress', 'Resolved', 'Rejected')),
+        'Pending', 'In Progress', 'Awaiting Information', 'Resolved', 'Rejected')),
     public_comment TEXT,
     internal_note  TEXT,
     created_at     TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
@@ -111,3 +109,26 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     attempted_at DOUBLE PRECISION NOT NULL   -- Unix time in seconds
 );
 CREATE INDEX IF NOT EXISTS idx_rate_limits_key ON rate_limits (key);
+
+-- Upgrade for databases created by the first version, which had seven statuses
+-- (Submitted / Under Review / Assigned were merged into "Pending"). Does nothing on a new database.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_constraint
+               WHERE conname = 'service_requests_status_check'
+                 AND pg_get_constraintdef(oid) LIKE '%Submitted%') THEN
+        ALTER TABLE service_requests DROP CONSTRAINT service_requests_status_check;
+        ALTER TABLE request_history  DROP CONSTRAINT request_history_new_status_check;
+        UPDATE service_requests SET status = 'Pending'
+            WHERE status IN ('Submitted', 'Under Review', 'Assigned');
+        UPDATE request_history SET new_status = 'Pending'
+            WHERE new_status IN ('Submitted', 'Under Review', 'Assigned');
+        UPDATE request_history SET old_status = 'Pending'
+            WHERE old_status IN ('Submitted', 'Under Review', 'Assigned');
+        ALTER TABLE service_requests ALTER COLUMN status SET DEFAULT 'Pending';
+        ALTER TABLE service_requests ADD CONSTRAINT service_requests_status_check CHECK (status IN (
+            'Pending', 'In Progress', 'Awaiting Information', 'Resolved', 'Rejected'));
+        ALTER TABLE request_history ADD CONSTRAINT request_history_new_status_check CHECK (new_status IN (
+            'Pending', 'In Progress', 'Awaiting Information', 'Resolved', 'Rejected'));
+    END IF;
+END $$;

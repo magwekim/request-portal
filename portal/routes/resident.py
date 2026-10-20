@@ -12,14 +12,12 @@ bp = Blueprint("resident", __name__, url_prefix="/resident")
 BLUEPRINTS = [bp]
 
 
-def _form_choices(db):
-    departments = db.execute(
-        "SELECT id, name FROM departments WHERE is_active = 1 ORDER BY name").fetchall()
-    categories = db.execute(
-        """SELECT c.id, c.name, c.department_id FROM request_categories c
-           JOIN departments d ON d.id = c.department_id
-           WHERE c.is_active = 1 AND d.is_active = 1 ORDER BY c.name""").fetchall()
-    return departments, categories
+def _category_choices(db):
+    """Active categories, each with its department name (the form groups them by department)."""
+    return db.execute(
+        """SELECT c.id, c.name, c.department_id, d.name AS department
+           FROM request_categories c JOIN departments d ON d.id = c.department_id
+           WHERE c.is_active = 1 AND d.is_active = 1 ORDER BY d.name, c.name""").fetchall()
 
 
 @bp.route("/dashboard")
@@ -48,39 +46,37 @@ def my_requests():
 @bp.route("/requests/new", methods=["GET", "POST"])
 @role_required("resident")
 def submit():
+    """Citizen files a request: category, location and description are required; the photo
+    is optional. The department is taken from the category, so residents never pick it."""
     db = get_db()
-    departments, categories = _form_choices(db)
+    categories = _category_choices(db)
     if request.method == "GET":
-        return render_template("resident/submit.html", form={}, errors={},
-                               departments=departments, categories=categories)
+        return render_template("resident/submit.html", form={}, errors={}, categories=categories)
     form, errors = request.form, {}
-    dept_id, cat_id = utils.to_int(form.get("department_id")), utils.to_int(form.get("category_id"))
+    cat_id = utils.to_int(form.get("category_id"))
     title, description, location = (clean(form.get("title")), clean(form.get("description")),
                                     clean(form.get("location")))
-    dept = db.execute("SELECT id FROM departments WHERE id = ? AND is_active = 1",
-                      (dept_id,)).fetchone()
-    cat = db.execute("SELECT id FROM request_categories WHERE id = ? AND department_id = ? "
-                     "AND is_active = 1", (cat_id, dept_id)).fetchone()
-    if dept is None:
-        errors["department_id"] = "Select a department."
-    if cat is None:
-        errors["category_id"] = ("Select a category that belongs to the chosen department."
-                                 if dept else "Select a category.")
-    if not 5 <= len(title) <= 150:
-        errors["title"] = "Title must be 5 to 150 characters."
-    if not 20 <= len(description) <= 5000:
-        errors["description"] = "Describe the issue in 20 to 5000 characters."
-    if len(location) > 200:
-        errors["location"] = "Location must be at most 200 characters."
+    category = next((c for c in categories if c["id"] == cat_id), None)
+    if category is None:
+        errors["category_id"] = "Select the type of problem you are reporting."
+    if title and not 5 <= len(title) <= 150:
+        errors["title"] = "A title, if you add one, must be 5 to 150 characters."
+    if not 10 <= len(description) <= 5000:
+        errors["description"] = "Describe the problem in 10 to 5000 characters."
+    if not 3 <= len(location) <= 200:
+        errors["location"] = "Tell us where the problem is (3 to 200 characters)."
     valid, upload_errors = uploads.validate_uploads(request.files.getlist("evidence"))
     if upload_errors:
         errors["evidence"] = " ".join(upload_errors)
     if errors:
         return render_template("resident/submit.html", form=form, errors=errors,
-                               departments=departments, categories=categories), 400
+                               categories=categories), 400
+    if not title:                                   # e.g. "Faulty street light - Kiambu Road"
+        title = f"{category['name']} - {location}"[:150]
     try:
         request_id, reference = workflow.create_service_request(
-            db, g.user["id"], dept_id, cat_id, title, description, location)
+            db, g.user["id"], category["department_id"], category["id"], title, description,
+            location)
         uploads.store_uploads(db, valid, request_id, g.user["id"])
         db.commit()
     except Exception:
@@ -132,7 +128,7 @@ def reply(request_id):
         return redirect(url_for("resident.request_detail", request_id=request_id))
     try:
         # The target status is fixed by the server; the browser never chooses it.
-        workflow.change_status(db, req, "Under Review", g.user, public_comment=message)
+        workflow.change_status(db, req, "Pending", g.user, public_comment=message)
         uploads.store_uploads(db, valid, request_id, g.user["id"])
         db.commit()
     except workflow.WorkflowError as exc:

@@ -27,7 +27,7 @@
       <h2 id="how">How to use this portal</h2>
       <ol class="steps">
         <li>Register for a resident account and sign in.</li>
-        <li>Choose the department and category, describe the problem, give the location and attach a photo if you have one.</li>
+        <li>Choose a category, say where the problem is, describe it and attach a photo if you have one.</li>
         <li>Keep the reference number you receive, for example <code>PSR-2026-000001</code>.</li>
         <li>Follow the status: Pending, In Progress, then Resolved. If officers need more details, you will be asked to reply on the request page.</li>
       </ol>
@@ -39,25 +39,13 @@
   </div>
 </section>
 
-<section aria-labelledby="roles">
-  <h2 id="roles">Who uses the portal</h2>
-  <div class="grid three">
-    <!-- IMAGE: role-resident. Replace static/img/role-resident.svg or change the src below. -->
-    <figure class="role-card">
-      <img src="{{ url_for('static', filename='img/role-resident.svg') }}" alt="A resident photographing a damaged road" width="800" height="450" loading="lazy">
-      <figcaption><strong>Residents</strong> submit requests, upload evidence and track every status change.</figcaption>
-    </figure>
-    <!-- IMAGE: role-officer. Replace static/img/role-officer.svg or change the src below. -->
-    <figure class="role-card">
-      <img src="{{ url_for('static', filename='img/role-officer.svg') }}" alt="A county officer working through a queue of requests" width="800" height="450" loading="lazy">
-      <figcaption><strong>County officers</strong> work on requests for their department and reply to residents.</figcaption>
-    </figure>
-    <!-- IMAGE: role-admin. Replace static/img/role-admin.svg or change the src below. -->
-    <figure class="role-card">
-      <img src="{{ url_for('static', filename='img/role-admin.svg') }}" alt="An administrator's dashboard with totals, a chart and an audit log" width="800" height="450" loading="lazy">
-      <figcaption><strong>Administrators</strong> manage departments, officers and assignments, and review the audit log.</figcaption>
-    </figure>
-  </div>
-  <p class="muted">This portal handles service requests and complaints only. It is not a news, jobs or tenders portal.</p>
+<section aria-labelledby="services">
+  <h2 id="services">Services you can report</h2>
+  <ul class="service-tiles">
+    <li><strong>Streetlights</strong><span>Faulty or missing street lighting</span></li>
+    <li><strong>Water supply</strong><span>Burst pipes, outages and sewer blockages</span></li>
+    <li><strong>Garbage collection</strong><span>Missed collection and illegal dumping</span></li>
+    <li><strong>Roads and drainage</strong><span>Potholes, damaged roads and blocked drains</span></li>
+  </ul>
 </section>
 {% endblock %}

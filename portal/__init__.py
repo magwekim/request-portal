@@ -30,8 +30,12 @@ def load_dotenv(path):
 def create_app(test_config=None):
     if test_config is None:
         load_dotenv(os.path.join(BASE_DIR, ".env"))
-    app = Flask(__name__)
-    production = os.environ.get("APP_ENV", "development").lower() == "production"
+    # Images, CSS and JS live in public/static. On Vercel everything in public/ is served straight
+    # from the CDN (fast, and it never wakes the Python function); locally Flask serves it.
+    app = Flask(__name__, static_folder=os.path.join(BASE_DIR, "public", "static"), static_url_path="/static")
+    # Vercel always sets VERCEL, so a forgotten APP_ENV can never leave a live site in development mode.
+    production = (os.environ.get("APP_ENV", "development").lower() == "production"
+                  or bool(os.environ.get("VERCEL")))
 
     _configure(app, production, test_config)
     app.teardown_appcontext(database.close_db)
@@ -147,7 +151,7 @@ def _add_template_helpers(app):
             moment = datetime.strptime(value, "%Y-%m-%d %H:%M:%S") + timedelta(hours=3)
         except ValueError:
             return value
-        return moment.strftime("%d %b %Y, %H:%M") + " EAT"
+        return moment.strftime("%d %b %Y, %H:%M")
 
 
 def _add_error_pages(app):

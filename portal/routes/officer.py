@@ -28,7 +28,7 @@ def dashboard():
         "AND r.status NOT IN ('Resolved','Rejected')", (g.user["id"],)).fetchone()[0]
     queue = db.execute(
         f"SELECT {REQUEST_LIST_COLUMNS} FROM {REQUEST_FROM} WHERE {scope} "
-        "AND r.status IN ('Submitted','Under Review','Assigned') "
+        "AND r.status = 'Pending' "
         "ORDER BY r.created_at ASC LIMIT 5", params).fetchall()
     dept = db.execute("SELECT name FROM departments WHERE id = ?",
                       (g.user["department_id"],)).fetchone()
@@ -200,10 +200,7 @@ def claim(request_id):
             raise workflow.WorkflowError("Another officer already took this request.")
         note = f"Claimed by {g.user['full_name']}"
         workflow.audit(db, g.user["id"], "request_claimed", "service_request", req["id"])
-        if req["status"] in ("Submitted", "Under Review"):
-            workflow.change_status(db, req, "Assigned", g.user, internal_note=note)
-        else:
-            _note_only(db, req, None, note)
+        _note_only(db, req, None, note)
     return _run(request_id, action, "The request is now assigned to you.")
 
 

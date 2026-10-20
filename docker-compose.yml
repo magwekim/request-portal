@@ -1,0 +1,15 @@
+# A local PostgreSQL for development:   docker compose up -d
+# The credentials match .env.example, so no other setup is needed.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: psr
+      POSTGRES_PASSWORD: psr
+      POSTGRES_DB: service_requests
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

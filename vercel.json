@@ -1,5 +1,8 @@
 {
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
+  "headers": [
+    { "source": "/static/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }] }
+  ],
   "functions": {
     "api/index.py": { "includeFiles": "portal/**" }
   }

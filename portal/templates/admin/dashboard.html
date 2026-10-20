@@ -12,6 +12,7 @@
   <div class="kpi kpi-open"><span class="kpi-label">Open cases</span><span class="kpi-value" data-stat="open_cases">{{ stats.open_cases }}</span><span class="kpi-sub">Not yet resolved or rejected</span></div>
   <div class="kpi kpi-progress"><span class="kpi-label">In progress</span><span class="kpi-value" data-stat="in_progress">{{ stats.in_progress }}</span></div>
   <div class="kpi kpi-done"><span class="kpi-label">Resolved</span><span class="kpi-value" data-stat="resolved">{{ stats.resolved }}</span><span class="kpi-sub">{{ (stats.resolved * 100 / total)|round|int if total else 0 }}% resolution rate</span></div>
+  <div class="kpi"><span class="kpi-label">Average time to resolve</span><span class="kpi-value">{% if avg_hours is none %}&ndash;{% elif avg_hours < 48 %}{{ avg_hours|round(1) }}<small> h</small>{% else %}{{ (avg_hours / 24)|round(1) }}<small> days</small>{% endif %}</span><span class="kpi-sub">From submission to resolution</span></div>
 </div>
 
 <ul class="chips" aria-label="Case breakdown">
@@ -70,6 +71,26 @@
     </ul>
   </section>
 </div>
+
+<section class="card" aria-labelledby="bycat">
+  <h2 id="bycat">Most reported categories</h2>
+  {% if by_category %}
+  {% set maxc = by_category[0].total %}
+  <ul class="hbars">
+    {% for c in by_category %}
+    {% set closed = c.total - c.open_cases %}{% set scale = c.total * 100 / maxc %}
+    <li>
+      <div class="hbar-head"><span>{{ c.name }}</span><strong>{{ c.total }} <span class="muted">({{ c.open_cases }} open)</span></strong></div>
+      <svg class="hbar" viewBox="0 0 100 3" preserveAspectRatio="none" role="img" aria-label="{{ c.open_cases }} open, {{ closed }} closed">
+        <rect width="100" height="3" class="seg-track"/>
+        <rect x="0" width="{{ scale * c.open_cases / c.total }}" height="3" class="seg-open"/>
+        <rect x="{{ scale * c.open_cases / c.total }}" width="{{ scale * closed / c.total }}" height="3" class="seg-resolved"/>
+      </svg>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">Category figures appear once requests come in.</p>{% endif %}
+</section>
 
 <h2>Latest requests <a class="more" href="{{ url_for('admin.all_requests') }}">View all &rarr;</a></h2>
 {% if recent %}
