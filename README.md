@@ -81,10 +81,6 @@ Generate a key with `python -c "import secrets; print(secrets.token_hex(32))"`.
 3. Push to GitHub and import the project in Vercel.
 4. Add environment variables `SECRET_KEY` and `DATABASE_URL`, then deploy.
 
-Notes: Vercel rejects requests over 4.5 MB, so attachments are limited to 1.3 MB each (large
-photos are shrunk in the browser; see `MAX_FILE_BYTES` in `portal/__init__.py`). Uploaded files
-are stored in PostgreSQL, and rate limits are kept there too, so back the database up.
-
 ## Troubleshooting
 
 - **"Set the DATABASE_URL environment variable"**: `.env` is missing, misnamed or empty.
