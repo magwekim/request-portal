@@ -18,8 +18,6 @@
       <span class="brand-text"><strong>{{ county_name }}</strong><span>{{ app_name }}</span></span>
     </a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
-  </div>
-  <div class="nav-bar"><div class="container">
     <nav id="site-nav" class="site-nav" aria-label="Main navigation">
       {% set ep = request.endpoint or '' %}
       {% macro link(endpoint, label) %}<a href="{{ url_for(endpoint) }}"{% if ep == endpoint %} aria-current="page"{% endif %}>{{ label }}</a>{% endmacro %}
@@ -50,11 +48,12 @@
       {% if current_user %}
       <form method="post" action="{{ url_for('public.logout') }}" class="inline-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="link-button">Sign out ({{ current_user.full_name.split(' ')[0] }})</button>
+        <span class="avatar" aria-hidden="true">{{ current_user.full_name[:1]|upper }}</span>
+        <button type="submit" class="link-button">Sign out</button>
       </form>
       {% endif %}
     </nav>
-  </div></div>
+  </div>
 </header>
 {% block page_head %}{% endblock %}
 <main id="main" class="container main">

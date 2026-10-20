@@ -1,47 +1,77 @@
 {% extends "base.html" %}
-{% from "_macros.html" import stat_card, request_table with context %}
+{% from "_macros.html" import request_table with context %}
 {% block title %}Administrator dashboard{% endblock %}
-{% block page_head %}<div class="page-head"><div class="container"><h1>Administrator dashboard</h1></div></div>{% endblock %}
+{% block page_head %}<div class="page-head"><div class="container page-head-row">
+  <div><h1>Administrator dashboard</h1><p class="muted">Live overview of every request across all departments.</p></div>
+  {% if unassigned %}<a class="btn btn-accent" href="{{ url_for('admin.assignments') }}">Assign {{ unassigned }} open request{{ 's' if unassigned != 1 }}</a>{% endif %}
+</div></div>{% endblock %}
 {% block content %}
-<div class="stats">
-  {{ stat_card('total', 'Total requests', stats.total) }}
-  {{ stat_card('open_cases', 'Open cases', stats.open_cases, 'warn') }}
-  {{ stat_card('pending', 'Pending (awaiting action)', stats.pending, 'warn') }}
-  {{ stat_card('in_progress', 'In progress', stats.in_progress) }}
-  {{ stat_card('awaiting_info', 'Awaiting resident', stats.awaiting_info) }}
-  {{ stat_card('resolved', 'Resolved', stats.resolved, 'good') }}
-  {{ stat_card('rejected', 'Rejected', stats.rejected) }}
-  {{ stat_card('unassigned', 'Open and unassigned', unassigned, 'warn') }}
-</div>
-<section class="card" aria-labelledby="ovr">
-  <h2 id="ovr">Open vs resolved cases</h2>
-  {% if stats.total %}
-  <ul class="meters">
-    {% for label, value, cls in (('Open', stats.open_cases, 'open'), ('Resolved', stats.resolved, 'resolved'), ('Rejected', stats.rejected, 'rejected')) %}
-    <li>
-      <label for="meter-{{ cls }}">{{ label }}: <strong>{{ value }}</strong> of {{ stats.total }} ({{ (value * 100 / stats.total)|round|int }}%)</label>
-      <meter id="meter-{{ cls }}" class="meter-{{ cls }}" min="0" max="{{ stats.total }}" value="{{ value }}">{{ value }}</meter>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}<p class="muted">No requests yet, so there is nothing to compare.</p>{% endif %}
-</section>
-{% if unassigned %}<p><a class="btn" href="{{ url_for('admin.assignments') }}">Assign {{ unassigned }} open request{{ 's' if unassigned != 1 }}</a></p>{% endif %}
-
-<h2>Requests by department and status</h2>
-<div class="table-wrap">
-<table>
-  <caption class="sr-only">Requests grouped by department and status</caption>
-  <thead><tr><th scope="col">Department</th>{% for s in STATUSES %}<th scope="col">{{ s }}</th>{% endfor %}<th scope="col">Total</th></tr></thead>
-  <tbody>
-  {% for d in by_department %}
-    <tr><th scope="row">{{ d.name }}</th>{% for s in STATUSES %}<td>{{ d.counts[s] }}</td>{% endfor %}<td><strong>{{ d.total }}</strong></td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+{% set total = stats.total %}
+<div class="kpis">
+  <div class="kpi"><span class="kpi-label">Total requests</span><span class="kpi-value" data-stat="total">{{ total }}</span></div>
+  <div class="kpi kpi-open"><span class="kpi-label">Open cases</span><span class="kpi-value" data-stat="open_cases">{{ stats.open_cases }}</span><span class="kpi-sub">Not yet resolved or rejected</span></div>
+  <div class="kpi kpi-progress"><span class="kpi-label">In progress</span><span class="kpi-value" data-stat="in_progress">{{ stats.in_progress }}</span></div>
+  <div class="kpi kpi-done"><span class="kpi-label">Resolved</span><span class="kpi-value" data-stat="resolved">{{ stats.resolved }}</span><span class="kpi-sub">{{ (stats.resolved * 100 / total)|round|int if total else 0 }}% resolution rate</span></div>
 </div>
 
-<h2>Latest requests</h2>
+<ul class="chips" aria-label="Case breakdown">
+  <li><span data-stat="pending">{{ stats.pending }}</span> pending action</li>
+  <li><span data-stat="awaiting_info">{{ stats.awaiting_info }}</span> awaiting resident</li>
+  <li><span data-stat="unassigned">{{ unassigned }}</span> open and unassigned</li>
+  <li><span data-stat="rejected">{{ stats.rejected }}</span> rejected</li>
+</ul>
+
+<div class="grid two charts">
+  <section class="card" aria-labelledby="ovr">
+    <h2 id="ovr">Open vs resolved cases</h2>
+    {% if total %}
+    {% set r = 52 %}{% set c = 2 * 3.14159 * r %}
+    {% set parts = (('Open', stats.open_cases, 'open'), ('Resolved', stats.resolved, 'resolved'), ('Rejected', stats.rejected, 'rejected')) %}
+    <div class="donut-wrap">
+      <svg class="donut" viewBox="0 0 140 140" role="img" aria-label="{{ stats.open_cases }} open, {{ stats.resolved }} resolved, {{ stats.rejected }} rejected out of {{ total }} requests">
+        <circle cx="70" cy="70" r="{{ r }}" fill="none" stroke="var(--line)" stroke-width="16"/>
+        {% set ns = namespace(offset=0) %}
+        {% for label, value, color in parts if value %}
+          {% set len = c * value / total %}
+          <circle cx="70" cy="70" r="{{ r }}" fill="none" class="arc seg-{{ color }}" stroke-width="16"
+                  stroke-dasharray="{{ len }} {{ c - len }}" stroke-dashoffset="{{ -ns.offset }}" transform="rotate(-90 70 70)"/>
+          {% set ns.offset = ns.offset + len %}
+        {% endfor %}
+        <text x="70" y="68" text-anchor="middle" class="donut-num">{{ total }}</text>
+        <text x="70" y="86" text-anchor="middle" class="donut-cap">requests</text>
+      </svg>
+      <ul class="legend">
+        {% for label, value, color in parts %}
+        <li><i class="swatch sw-{{ color }}"></i>{{ label }}<strong>{{ value }}</strong><span class="muted">{{ (value * 100 / total)|round|int }}%</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% else %}<p class="muted">No requests yet, so there is nothing to compare.</p>{% endif %}
+  </section>
+
+  <section class="card" aria-labelledby="bydept">
+    <h2 id="bydept">Workload by department</h2>
+    {% set maxd = (by_department|map(attribute='total')|max) or 1 %}
+    <ul class="hbars">
+      {% for d in by_department %}
+      {% set res = d.counts['Resolved'] %}{% set rej = d.counts['Rejected'] %}{% set opn = d.total - res - rej %}
+      <li>
+        <div class="hbar-head"><span>{{ d.name }}</span><strong>{{ d.total }}</strong></div>
+        <svg class="hbar" viewBox="0 0 100 3" preserveAspectRatio="none" role="img" aria-label="{{ opn }} open, {{ res }} resolved, {{ rej }} rejected">
+          {% set scale = d.total * 100 / maxd %}
+          <rect width="100" height="3" class="seg-track"/>
+          {% if d.total %}{% set w_o = scale * opn / d.total %}{% set w_r = scale * res / d.total %}{% set w_x = scale * rej / d.total %}
+          <rect x="0" width="{{ w_o }}" height="3" class="seg-open"/>
+          <rect x="{{ w_o }}" width="{{ w_r }}" height="3" class="seg-resolved"/>
+          <rect x="{{ w_o + w_r }}" width="{{ w_x }}" height="3" class="seg-rejected"/>{% endif %}
+        </svg>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<h2>Latest requests <a class="more" href="{{ url_for('admin.all_requests') }}">View all &rarr;</a></h2>
 {% if recent %}
   {{ request_table(recent, 'admin.request_detail', show_resident=True, show_officer=True) }}
 {% else %}

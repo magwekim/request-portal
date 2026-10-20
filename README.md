@@ -8,9 +8,6 @@ through their department's queue and administrators keep everything in order.
 It's a small Flask app on PostgreSQL, with plain HTML, CSS and a little JavaScript. There's no
 front-end framework and no build step. It runs on your own computer and on Vercel.
 
-> New to all this? `docs/system_guide.pdf` walks through the whole thing step by step: how the
-> code fits together, running it, debugging, Git and deploying.
-
 ---
 
 ## Run it on your computer
@@ -69,7 +66,8 @@ internal notes.
 unassigned ones in their department. They can claim a request, change its status, reply to the
 resident and leave private notes for colleagues. They can't reassign requests or manage users.
 
-**Administrators** see everything. They create officers and other administrators, manage
+**Administrators** see everything, including a dashboard with basic analytics: totals, open vs
+resolved cases (donut chart and percentages), and workload per department. They create officers and other administrators, manage
 departments and categories, assign requests, switch accounts on or off and read the audit log.
 An administrator can't deactivate their own account, so nobody gets locked out by accident.
 
@@ -197,7 +195,7 @@ at your real one.
 TEST_DATABASE_URL=postgresql://user:pass@localhost/psr_test python -m unittest discover -s tests -v
 ```
 
-There are 53 tests and they take about a minute (password hashing is slow on purpose). Each one
+There are 57 tests and they take about a minute (password hashing is slow on purpose). Each one
 starts from an emptied database and uses made-up data. They cover registration and sign-in,
 submitting requests, who can see what, assignments and status rules, public replies versus
 private notes, CSRF, SQL injection and XSS attempts, upload safety, dashboard numbers,
@@ -211,7 +209,6 @@ api/index.py            the entry point Vercel uses
 vercel.json             sends every URL to api/index.py
 requirements.txt        Flask and psycopg (the PostgreSQL driver)
 .env.example            copy to .env and adjust
-docs/system_guide.pdf   the step-by-step guide
 
 portal/                 the application
   __init__.py           create_app(): settings, security headers, error pages
@@ -230,6 +227,7 @@ portal/                 the application
     officer.py          officer pages, request processing, attachment downloads
     admin.py            dashboard, assignments, users, departments, categories, audit log
   templates/            Jinja2 pages: auth/, resident/, officer/, admin/, errors/
+                        (_macros.html holds shared pieces: badges, tables, form fields)
   static/               css/, js/ and img/
 
 tests/test_portal.py    the automated tests
@@ -254,7 +252,13 @@ Photos residents attach to a request appear as thumbnails on the request page (`
 and open in a viewer; PDFs stay download-only.
 
 Keep each photo under about 500 KB and update the `alt` text to describe your picture. The colours are
-at the top of `portal/static/css/style.css`.
+at the top of `portal/static/css/style.css`. The most recent design tweaks (header, dashboard cards,
+charts, responsive tables) are in the "Design refresh" section at the end of that file, and its
+colour variables override the ones at the top.
+
+Because the Content-Security-Policy blocks inline styles, the dashboard charts are drawn as inline
+SVG styled by CSS classes. Don't add `style="..."` attributes to templates; add a class to
+`style.css` instead.
 
 ## What it doesn't do (yet)
 

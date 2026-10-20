@@ -1,6 +1,6 @@
 {% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
 
-{% macro status_badge(status) %}<span class="badge badge-{{ status|lower|replace(' ', '-') }}">{{ status }}</span>{% endmacro %}
+{% macro status_badge(status) %}<span class="badge badge-{{ status|lower|replace(' ', '-') }}"><i class="dot"></i>{{ status }}</span>{% endmacro %}
 
 {% macro field(name, label, form, errors, type='text', required=True, help=None, autocomplete=None, maxlength=None) %}
 <div class="field{% if errors.get(name) %} has-error{% endif %}">
@@ -66,7 +66,7 @@
 
 {% macro request_table(items, base, show_resident=False, show_officer=False) %}
 <div class="table-wrap">
-<table>
+<table class="responsive">
   <caption class="sr-only">Service requests</caption>
   <thead><tr>
     <th scope="col">Reference</th><th scope="col">Title</th>
@@ -78,13 +78,13 @@
   <tbody>
   {% for r in items %}
     <tr>
-      <td><a href="{{ url_for(base, request_id=r.id) }}">{{ r.reference_number }}</a></td>
-      <td>{{ r.title }}</td>
-      {% if show_resident %}<td>{{ r.resident_name }}</td>{% endif %}
-      <td>{{ r.department }}<br><span class="muted">{{ r.category }}</span></td>
-      <td>{{ status_badge(r.status) }}</td>
-      {% if show_officer %}<td>{{ r.officer_name or 'Unassigned' }}</td>{% endif %}
-      <td>{{ r.created_at|dt }}</td>
+      <td data-label="Reference" class="ref-cell"><a href="{{ url_for(base, request_id=r.id) }}">{{ r.reference_number }}</a></td>
+      <td data-label="Title">{{ r.title }}</td>
+      {% if show_resident %}<td data-label="Resident">{{ r.resident_name }}</td>{% endif %}
+      <td data-label="Department">{{ r.department }}<br><span class="muted">{{ r.category }}</span></td>
+      <td data-label="Status">{{ status_badge(r.status) }}</td>
+      {% if show_officer %}<td data-label="Officer">{{ r.officer_name or 'Unassigned' }}</td>{% endif %}
+      <td data-label="Submitted">{{ r.created_at|dt }}</td>
     </tr>
   {% endfor %}
   </tbody>
